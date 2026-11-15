@@ -11,7 +11,7 @@ The list-view Move button shipped in 1.4.3–1.4.5 (see Completed). What's left:
 ### 2. Publish on the Chrome Web Store
 
 - [ ] Register a Chrome Web Store developer account (one-time $5 fee).
-- [ ] Update the privacy policy: it currently says only the grid/list setting is stored. It must also cover pick lists in `localStorage` and the add-to-collection / remove-from-wishlist requests made on user action. Host it at a public URL (this repo is private, so it can't live here unless the repo is made public or the policy is hosted elsewhere, e.g. GitHub Pages from a public repo or a gist).
+- [x] Privacy policy rewritten (`docs/privacy-policy.md`) and published as a public gist: https://gist.github.com/anmokhta/0dbdab84b479a030717f3584833156b9. When the policy changes, edit `docs/privacy-policy.md` and update the gist with `gh gist edit 0dbdab84b479a030717f3584833156b9 docs/privacy-policy.md`.
 - [ ] Refresh the store description to mention search, Select/Exclude lists, and Move to collection. Keep the manifest `description` ≤ 132 chars (currently 127).
 - [ ] Recapture screenshots (existing ones predate pick lists, search and move).
 - [ ] Single-purpose and permissions justification for review (no permissions declared; content script on `pricecharting.com/wishlist*` only).

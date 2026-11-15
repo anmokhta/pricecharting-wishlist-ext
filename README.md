@@ -64,6 +64,7 @@ extension/                  Everything that ships in the extension
 docs/
   technical-summary.md      Deep dive: DOM model, architecture, testing, history
   debug-session-summary.md  Root-cause write-up of the "bare rows" bug fixed in 1.4.1
+  privacy-policy.md         Privacy policy (published copy: see ROADMAP, Chrome Web Store item)
 test/
   extension.spec.js         Automated end-to-end tests (Playwright)
   fixtures.js               Fake wishlist pages shared by the tests and the mockup
