@@ -10,12 +10,16 @@ The list-view Move button shipped in 1.4.3–1.4.5 (see Completed). What's left:
 
 ### 2. Publish on the Chrome Web Store
 
-- [ ] Register a Chrome Web Store developer account (one-time $5 fee).
+**Status:** v1.4.6 submitted for review on 2026-11-15. Item ID `opfopmnimlhgjgnoegkghpdpdgabjhcf` (dashboard: https://chrome.google.com/webstore/devconsole).
+
+- [x] Register a Chrome Web Store developer account; contact email set and verified.
 - [x] Privacy policy rewritten (`docs/privacy-policy.md`) and published as a public gist: https://gist.github.com/anmokhta/0dbdab84b479a030717f3584833156b9. When the policy changes, edit `docs/privacy-policy.md` and update the gist with `gh gist edit 0dbdab84b479a030717f3584833156b9 docs/privacy-policy.md`.
-- [ ] Refresh the store description to mention search, Select/Exclude lists, and Move to collection. Keep the manifest `description` ≤ 132 chars (currently 127).
-- [ ] Recapture screenshots (existing ones predate pick lists, search and move).
-- [ ] Single-purpose and permissions justification for review (no permissions declared; content script on `pricecharting.com/wishlist*` only).
-- [ ] Upload the zip from the latest GitHub Release and submit for review.
+- [x] Store description written (search, Select/Exclude lists, Move to collection, privacy note, not-affiliated line). Category: Functionality & UI.
+- [x] Screenshots captured on the test account; 1280×800 versions (page only, no browser toolbar) are in `screencaps/1280x800/`.
+- [x] Privacy practices: single-purpose statement, host-access justification (content script on `pricecharting.com/wishlist*` only; no permissions), no remote code, data usage = website content only, all three certifications.
+- [x] Test account and test instructions (under 500 characters) entered. Keep that account's wishlist stocked and its password unchanged.
+- [x] Uploaded the v1.4.6 zip from GitHub Releases and submitted for review (2026-11-15).
+- [ ] Approved and published.
 - [ ] After approval: add the store link to the README install section.
 
 ### 3. Saved selections
@@ -43,6 +47,16 @@ After selecting or excluding cards, give the selection a name and save it. A con
 
 ## Backlog
 
+- **Automated Chrome Web Store uploads from CI.** Today each new version means downloading the zip from GitHub Releases and uploading it by hand. Plan:
+  - **Google side:** in a Google Cloud project, enable the Chrome Web Store API, create an OAuth client, and generate a refresh token for the publisher account.
+  - **GitHub side:** store the client ID, client secret, refresh token and item ID as repository secrets (never in the repo).
+  - **CI:** a `store` job in `.github/workflows/ci.yml` that runs after `release`, only on `main`, and only when the release job *created* a new version, not when it replaced a zip. The store rejects re-uploading the same version anyway. It uploads the zip, then either submits it for review automatically or leaves it as a draft for a manual click. Start with draft-only until the flow is trusted.
+  - **Pitfalls:**
+    - An upload fails while a previous version is still in review, so the job should report that clearly, not break the release.
+    - Every submission goes through review again.
+    - The API only updates the package; listing text, screenshots and privacy answers stay manual.
+    - Check which version of the Chrome Web Store API is current when implementing, since Google has revised it.
+    - The refresh token can expire if unused or revoked, so add a manual `workflow_dispatch` run to test it.
 - **CSV export (private build only).** Possibly a separate private branch or build that restores the Export CSV button (removed in 1.4.6). It must never ship in the public Chrome Web Store build.
 - **Safari / iOS port.** No code changes are expected (plain MV3 content script, standard DOM APIs), but it needs:
   - Full Xcode from the App Store (Command Line Tools alone don't include `safari-web-extension-packager`).

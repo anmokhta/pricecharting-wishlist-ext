@@ -70,6 +70,7 @@ test/
   fixtures.js               Fake wishlist pages shared by the tests and the mockup
   mockup.html               Manual mockup page for trying changes in a browser
   serve.js                  Tiny static server for the mockup
+screencaps/                 Chrome Web Store screenshots (originals + 1280x800/ upload copies)
 .github/workflows/ci.yml    Runs the tests; on main, builds the zip and publishes a Release
 ROADMAP.md                  Planned work and backlog
 ```
