@@ -1,5 +1,8 @@
-.pcw-status { margin: 6px 0; padding: 6px 10px; font-size: 13px; background: #eef4ff; border: 1px solid #b7cdf5; border-radius: 4px; color: #234; }
-.pcw-summary { margin: 4px 0 10px; font-size: 15px; font-weight: bold; color: #222; }
+/* Blue totals box: always visible; the note shows loading progress or Retry. */
+.pcw-summary { margin: 6px 0 10px; padding: 8px 12px; font-size: 15px; background: #eef4ff; border: 1px solid #b7cdf5; border-radius: 4px; color: #222; }
+.pcw-summary-text { font-weight: bold; }
+.pcw-summary-note { margin-left: 10px; font-size: 13px; color: #234; }
+.pcw-summary-note:empty { display: none; }
 .pcw-search { margin: 6px 0; }
 .pcw-search input {
   box-sizing: border-box;
@@ -35,7 +38,33 @@ table#active.pcw-grid tr.item > td.expand { display: block !important; order: 6;
    the Remove button in td.expand, so its own cell is empty and hidden.
    Grid view: full-width button in td.pcw-move (rule below). */
 table#active:not(.pcw-grid) td.pcw-move { display: none; }
-table#active:not(.pcw-grid) td.expand .pcw-btn-move { width: auto; margin-top: 4px; white-space: nowrap; }
+table#active:not(.pcw-grid) td.expand .pcw-btn-move { width: 100%; margin-top: 4px; white-space: nowrap; font-family: inherit; }
+
+/* Move label: long in grid view, short in list view. */
+.pcw-btn-move .pcw-short { display: none; }
+table#active:not(.pcw-grid) .pcw-btn-move .pcw-long { display: none; }
+table#active:not(.pcw-grid) .pcw-btn-move .pcw-short { display: inline; }
+
+/* List view: Remove styled like the extension's buttons, stacked above Move
+   at the same width. Overrides the site's tiny .small.button style. */
+table#active:not(.pcw-grid) tr.item > td.expand input.js-cancel-bid {
+  display: block;
+  width: 100%;
+  margin: 0 !important;
+  padding: 5px 10px !important;
+  border: 0;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  font-family: inherit;
+  font-size: 12px !important;
+  font-weight: bold;
+  line-height: normal;
+  color: #fff;
+  background: #0174d5;
+  cursor: pointer;
+}
+table#active:not(.pcw-grid) tr.item > td.expand input.js-cancel-bid:hover { background: #025dab; }
 table#active.pcw-grid tr.item > td.pcw-move { display: block !important; order: 5; width: 100% !important; margin-top: 6px; padding: 0 !important; }
 .pcw-btn-move {
   display: block;

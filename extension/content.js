@@ -83,14 +83,17 @@
   setView(store.get() === 'grid' ? 'grid' : 'list');
 
   // ---- Load every page, then sort globally ----
+  // The blue box: wishlist totals, always visible. Its note part only shows
+  // loading progress, or an error with a Retry button if a page fails.
   const summary = document.createElement('div');
   summary.className = 'pcw-summary';
-  summary.textContent = 'Counting wishlist items…';
+  const summaryText = document.createElement('span');
+  summaryText.className = 'pcw-summary-text';
+  summaryText.textContent = 'Counting wishlist items…';
+  const summaryNote = document.createElement('span');
+  summaryNote.className = 'pcw-summary-note';
+  summary.append(summaryText, summaryNote);
   table.parentElement.insertBefore(summary, table);
-
-  const status = document.createElement('div');
-  status.className = 'pcw-status';
-  table.parentElement.insertBefore(status, table);
 
   // Current search text (see the search box below). Empty = show everything.
   let query = '';
@@ -110,7 +113,7 @@
       ? `${rows.length.toLocaleString()} of ${all.length.toLocaleString()} wishlist items match “${queryRaw}” · Total value: ${fmt(total)}`
       : `${rows.length.toLocaleString()} wishlist item${rows.length === 1 ? '' : 's'} · Total value: ${fmt(total)}`;
     if (priced < rows.length) text += ` (${rows.length - priced} with no price)`;
-    summary.textContent = text;
+    summaryText.textContent = text;
   }
 
   // The site has its own infinite scroll (market_ae.js: on_scroll -> fetch_next)
@@ -149,7 +152,7 @@
     const seen = new Set([...tbody.querySelectorAll(':scope > tr.item')].map((r) => r.id));
     while (pendingCursor && pagesLoaded < MAX_PAGES) {
       const cursor = pendingCursor;
-      status.textContent = `Loading all wishlist items… (${tbody.querySelectorAll('tr.item').length} so far)`;
+      summaryNote.textContent = `Loading all wishlist items… (${tbody.querySelectorAll('tr.item').length} so far)`;
       const res = await fetch(location.href, {
         method: 'POST',
         credentials: 'same-origin',
@@ -378,6 +381,18 @@
     removeBtn.click();
   }
 
+  // Grid view shows the long label, list view the short one (CSS picks which),
+  // so switching views needs no relabeling and keeps the armed state.
+  function setMoveLabel(b, long, short) {
+    const l = document.createElement('span');
+    l.className = 'pcw-long';
+    l.textContent = long;
+    const s = document.createElement('span');
+    s.className = 'pcw-short';
+    s.textContent = short;
+    b.replaceChildren(l, s);
+  }
+
   function addMoveButtons() {
     tbody.querySelectorAll('tr.item').forEach((row) => {
       if (row.querySelector('.pcw-move')) return;
@@ -386,25 +401,25 @@
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'pcw-btn-move';
-      b.textContent = 'Move to collection';
+      setMoveLabel(b, 'Move to collection', 'Move');
       let armTimer = null;
-      const reset = () => { b.dataset.state = ''; b.textContent = 'Move to collection'; b.disabled = false; };
+      const reset = () => { b.dataset.state = ''; setMoveLabel(b, 'Move to collection', 'Move'); b.disabled = false; };
       b.onclick = async () => {
         if (b.dataset.state === 'moving') return;
         if (b.dataset.state !== 'armed') {
           // First click arms the button; a second click within 4s confirms.
           b.dataset.state = 'armed';
-          b.textContent = 'Click again to confirm';
+          setMoveLabel(b, 'Click again to confirm', 'Confirm?');
           armTimer = setTimeout(reset, 4000);
           return;
         }
         clearTimeout(armTimer);
         b.dataset.state = 'moving';
-        b.textContent = 'Moving…';
+        setMoveLabel(b, 'Moving…', 'Moving…');
         b.disabled = true;
         try {
           await moveToCollection(row);
-          b.textContent = '✓ Moved to collection';
+          setMoveLabel(b, '✓ Moved to collection', '✓ Moved');
           if (picks.ids.delete(row.id)) {
             if (picks.ids.size === 0) picks.mode = 'none';
             picks.save();
@@ -419,7 +434,7 @@
         } catch (err) {
           console.error('Move to collection failed:', err);
           reset();
-          b.textContent = 'Failed — try again';
+          setMoveLabel(b, 'Failed — try again', 'Failed, retry');
         }
       };
       td.appendChild(b);
@@ -517,24 +532,21 @@
     observer.disconnect();
     loadAll()
       .then(() => {
+        summaryNote.textContent = '';
         enhanceRows();
         const n = tbody.querySelectorAll('tr.item').length;
-        status.textContent = `Showing all ${n} wishlist items` +
-          (sort === 'lowest-price' || sort === 'highest-price' ? ', sorted by price.' : '.');
         if (debug) console.log(`[pcw] done: ${n} items, ${dupesSkipped} duplicate${dupesSkipped === 1 ? '' : 's'} skipped`);
-        setTimeout(() => status.remove(), 6000);
       })
       .catch((e) => {
         // Keep what loaded and offer to resume from the page that failed.
         enhanceRows();
-        const n = tbody.querySelectorAll('tr.item').length;
-        status.textContent = `Loaded ${n} wishlist items, but the next page failed (${e.message}). `;
+        summaryNote.textContent = `Couldn't load everything (${e.message}). `;
         const retry = document.createElement('button');
         retry.type = 'button';
         retry.className = 'pcw-retry';
         retry.textContent = 'Retry';
         retry.onclick = run;
-        status.appendChild(retry);
+        summaryNote.appendChild(retry);
       })
       .finally(() => observer.observe(tbody, { childList: true }));
   }

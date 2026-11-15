@@ -14,11 +14,11 @@ It is content-script only: no background worker, no popup, and no declared permi
 |---|---|
 | **Whole-wishlist price sort** | PriceCharting sorts each 200-item page on its own, so "Low to high" restarts on page 2. The extension loads every page up front and re-sorts the entire list when the sort is *Lowest price* or *Highest price*. Items without a price go last. |
 | **Grid / list toggle** | Two icons next to the sort/filter controls switch between the site's table and a card grid with larger (240px) images. Your choice is remembered. |
-| **Count and total value** | A banner above the list shows the number of items and their combined value, plus how many have no price. |
+| **Count and total value** | A blue box above the list always shows the number of items and their combined value, plus how many have no price. While pages load it shows progress; if a page fails it shows a **Retry** button. The yellow Select/Exclude panel is separate. |
 | **Search** | Filter by card name or set. Every word you type must match. Press <kbd>Esc</kbd> to clear. The count and total follow the search. |
 | **Select / Exclude lists** | Each card gets *Select* and *Exclude* buttons. Build a list of cards to keep (green, with its total) or cards to drop (red, with the remaining wishlist total). Only one mode is active at a time. Picks are saved per wishlist and survive reloads. |
 | **Export CSV** | Downloads the current pick list as `wishlist-selected-YYYY-MM-DD.csv` or `wishlist-excluded-YYYY-MM-DD.csv`, with summary totals. |
-| **Move to collection** | A button on every card, in both list and grid view (in list view it sits under the Remove button). Adds the card to your PriceCharting collection using your default condition (by design; there is no per-card condition choice), then removes it from the wishlist. Click once to arm, again within 4 seconds to confirm. The wishlist removal only happens if the add succeeds. |
+| **Move to collection** | A button on every card, in both list and grid view (in list view it's a short **Move** button under Remove, styled to match). Adds the card to your PriceCharting collection using your default condition (by design; there is no per-card condition choice), then removes it from the wishlist. Click once to arm, again within 4 seconds to confirm. The wishlist removal only happens if the add succeeds. |
 | **Usable Remove button** | The site's bare `-` button is relabeled **Remove** and stays visible in grid view. |
 | **Set filter label fix** | The Set filter's placeholder says "Type part of console" (a PriceCharting leftover from video games); it's relabeled to "Type part of set". |
 
@@ -84,7 +84,7 @@ ROADMAP.md                  Planned work and backlog
 
 1. Relabels the Set filter placeholder.
 2. Adds the grid/list toggle and applies the saved view (works before the rest of the list has loaded).
-3. Relabels Remove buttons, inserts the summary, status, pick panel and search box.
+3. Relabels Remove buttons, inserts the search box, the blue totals box and the pick panel.
 4. Runs `loadAll()`, then `enhanceRows()`: `purgeSiteRows()` → `sortRows()` → image upgrade → relabel → pick buttons → move buttons → pick UI → search. Every step is safe to repeat.
 5. Starts a `MutationObserver` on the table body. Any wishlist row added later (by the site or anything else) triggers `enhanceRows()` again, so it gets the same buttons and is sorted into place.
 
@@ -92,7 +92,7 @@ ROADMAP.md                  Planned work and backlog
 
 PriceCharting's wishlist is paginated server-side, 200 items per page, using an opaque cursor in `tr.offers-paging form.next_page input[name=cursor]`. `loadAll()` POSTs `cursor=<value>` back to the same URL, parses each response with `DOMParser`, and imports the `tr.item` / `tr.item-details` rows. It stops when no cursor comes back, the cursor repeats, or after 100 pages. A card that comes back on a second page (same row id) is skipped along with its details row.
 
-The site also has its own infinite scroll that fetches the next page when you near the bottom. To avoid both loaders racing (which produced duplicate, featureless "bare" rows in 1.4.0), the extension removes the paging row at startup so the site has nothing to fetch, and `purgeSiteRows()` drops any class-less row that has a real twin. The paging row is never put back: once the site's loader finds it missing, it switches itself off for good. If a page fails to load, the extension keeps what it has and shows a **Retry** button that resumes from the page that failed. See [docs/debug-session-summary.md](docs/debug-session-summary.md).
+The site also has its own infinite scroll that fetches the next page when you near the bottom. To avoid both loaders racing (which produced duplicate, featureless "bare" rows in 1.4.0), the extension removes the paging row at startup so the site has nothing to fetch, and `purgeSiteRows()` drops any class-less row that has a real twin. The paging row is never put back: once the site's loader finds it missing, it switches itself off for good. If a page fails to load, the extension keeps what it has and shows a **Retry** button in the totals box that resumes from the page that failed. See [docs/debug-session-summary.md](docs/debug-session-summary.md).
 
 ### Grid view
 

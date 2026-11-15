@@ -2,12 +2,10 @@
 
 ## Planned
 
-### 1. One-click "Move to collection" in list view
+### 1. Verify "Move to collection" on the real site
 
-"One click" here means click once, then click again to confirm, the same as grid view. Move always uses your PriceCharting default condition.
+The list-view Move button shipped in 1.4.3–1.4.5 (see Completed). What's left:
 
-- [x] Show the Move button in list view rows (1.4.3), under the Remove button (1.4.4).
-- [x] Same click-to-confirm behavior in list and grid view.
 - [ ] Verify the move end-to-end against the real API (has only been tested with stubbed `fetch`): add lands in the Collection tab, wishlist row removed, failure path leaves the card in place.
 
 ### 2. Publish on the Chrome Web Store
@@ -51,3 +49,53 @@ After selecting or excluding cards, give the selection a name and save it. A con
   - A decision on whether to commit the generated Xcode project (e.g. under `safari/`) or regenerate it in CI.
   - Testing in macOS Safari (Settings → Developer → Add Temporary Extension), then the iOS Simulator. Check CSV download on iOS and `localStorage` persistence.
   - A paid Apple Developer membership to run it on a real iPhone or publish it.
+
+## Completed
+
+Newest first. When a planned or backlog item ships, it moves here.
+
+### 1.4.5 — Totals box and list-view buttons (2026-11-15)
+
+- **What it does:**
+  - The blue box above the list now permanently shows the wishlist's item count and total value, instead of a status message that disappeared after 6 seconds. It also shows loading progress, and a Retry button if a page fails.
+  - In list view only, the Move button reads "Move" ("Confirm?" when armed). Remove now matches the other buttons: same size, font and rounded corners, stacked at the same width as Move. Grid view is unchanged.
+- **Code:**
+  - `extension/content.js`: the summary and status boxes are merged into one `.pcw-summary` box, with `.pcw-summary-text` for the totals and `.pcw-summary-note` for progress or Retry. The 6-second removal is gone. A new `setMoveLabel()` gives each Move state a long (grid) and a short (list) label.
+  - `extension/content.css`: blue box styles; long/short label switching; list-view Remove styling.
+- **Tests:**
+  - The box stays visible after switching views and waiting past 6 seconds.
+  - A search doesn't wipe the Retry button.
+  - The Move tests check view-specific labels.
+  - List-view Remove matches Select's style and Move's width.
+  - Grid keeps the long label.
+
+### 1.4.4 — Move under Remove in list view (2026-11-15)
+
+- **What it does:** in list view, the Move button sits under the Remove button at the start of the row, instead of at the far end.
+- **Code:** `extension/content.js`: a new `placeMoveButtons()` moves each button into the Remove cell (list) or its own cell (grid) whenever the view changes or rows are added. `extension/content.css`: list-view placement.
+- **Tests:** the button is under Remove in list view and in its own cell in grid view, including after switching views. A card added after loading gets the button under Remove.
+
+### 1.4.3 — Move to collection in list view (2026-11-15)
+
+- **What it does:** the Move to collection button, previously grid-only, also appears in list view, with the same click-then-confirm. It always uses your PriceCharting default condition (by design).
+- **Code:** `extension/content.css` only: the Move cell is no longer hidden in list view.
+- **Tests:** the Move flow (confirm, success, failure) runs in both views. New tests for the 4-second auto-reset and the list-view layout.
+
+### 1.4.2 — Backlog fixes and automated tests (2026-11-15)
+
+- **What it does:**
+  - Cards repeated across pages are skipped.
+  - Cards that appear after loading get all the buttons and are sorted in.
+  - A failed page shows Retry instead of silently breaking the site's own scrolling.
+  - The failure path now also does the image swap and Remove relabel.
+  - Every push runs automated tests, and the release zip is only published if they pass.
+- **Code:**
+  - `extension/content.js`: dedupe in `loadAll()`, the `pcw-debug` log, `enhanceRows()`, a `MutationObserver` for late rows, `run()` with Retry.
+  - New `test/` folder: Playwright tests, shared fake pages, a manual mockup and a small server.
+  - `package.json`, `playwright.config.js`.
+  - `.github/workflows/ci.yml` replaces `release.yml`.
+- **Tests:** the first 18 end-to-end tests: loading and sorting, duplicates, Retry, late rows, grid view, search, Select/Exclude with CSV export, and Move to collection.
+
+### 1.4.1 and earlier (before this repo)
+
+Cross-page price sort, grid view, totals, Remove relabel, Set filter label, Select/Exclude lists with CSV export, search, grid-view Move to collection, and the 1.4.1 fix for duplicate "bare" rows. No dates were recorded. See [docs/technical-summary.md](docs/technical-summary.md) and [docs/debug-session-summary.md](docs/debug-session-summary.md).

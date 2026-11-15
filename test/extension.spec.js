@@ -51,7 +51,8 @@ const test = base.extend({
         await page.goto(url);
       },
       async loaded() {
-        await expect(page.locator('.pcw-status')).toContainText(/Showing all|failed/);
+        await expect(page.locator('.pcw-summary-note')).not.toContainText('Loading');
+        await expect(page.locator('.pcw-summary-text')).toContainText('Total value');
       }
     };
     const cursorFor = (i) => (i + 1 < site.pages.length ? 'c' + (i + 2) : null);
@@ -89,8 +90,8 @@ test.describe('loading and sorting', () => {
     await site.open();
     await site.loaded();
     expect(await ids(page)).toEqual(['bid-6', 'bid-5', 'bid-3', 'bid-2', 'bid-1', 'bid-4', 'bid-7']);
-    await expect(page.locator('.pcw-status')).toHaveText('Showing all 7 wishlist items, sorted by price.');
-    await expect(page.locator('.pcw-summary')).toHaveText('7 wishlist items · Total value: $1,085.49 (1 with no price)');
+    await expect(page.locator('.pcw-summary-text')).toHaveText('7 wishlist items · Total value: $1,085.49 (1 with no price)');
+    await expect(page.locator('.pcw-summary-note')).toBeEmpty();
     expect(site.cursorsRequested).toEqual(['c2', 'c3']);
   });
 
@@ -132,12 +133,19 @@ test.describe('loading and sorting', () => {
   test('on a failed page, shows Retry, which resumes from the failed page only', async ({ page, site }) => {
     site.failCursors.add('c3');
     await site.open();
-    await expect(page.locator('.pcw-status')).toContainText('Loaded 5 wishlist items, but the next page failed (HTTP 500)');
+    await expect(page.locator('.pcw-summary-note')).toContainText("Couldn't load everything (HTTP 500)");
+    await expect(page.locator('.pcw-summary-text')).toContainText('5 wishlist items');
+    // Typing a search updates the totals but must not wipe the Retry button.
+    await page.locator('.pcw-search input').fill('base');
+    await expect(page.locator('.pcw-summary-text')).toContainText('match “base”');
+    await expect(page.locator('.pcw-summary .pcw-retry')).toBeVisible();
+    await page.locator('.pcw-search input').press('Escape');
     // What loaded is still fully enhanced, including the parts the old fallback skipped.
     await expect(page.locator('tr.item .pcw-pick-actions')).toHaveCount(5);
     await expect(page.locator('tr.item input.js-cancel-bid[value="Remove"]')).toHaveCount(5);
     await page.locator('.pcw-retry').click();
-    await expect(page.locator('.pcw-status')).toHaveText('Showing all 7 wishlist items, sorted by price.');
+    await expect(page.locator('.pcw-summary-note')).toBeEmpty();
+    await expect(page.locator('.pcw-summary-text')).toContainText('7 wishlist items');
     expect(site.cursorsRequested).toEqual(['c2', 'c3', 'c3']);
     expect(await ids(page)).toEqual(['bid-6', 'bid-5', 'bid-3', 'bid-2', 'bid-1', 'bid-4', 'bid-7']);
   });
@@ -160,6 +168,16 @@ test.describe('rows that arrive after loading', () => {
     await expect(page.locator('tr#bid-50 input.js-cancel-bid')).toHaveValue('Remove');
     expect((await ids(page)).slice(0, 2)).toEqual(['bid-6', 'bid-50']);
     await expect(page.locator('.pcw-summary')).toContainText('8 wishlist items');
+  });
+
+  test('the totals box stays visible after loading and after switching views', async ({ page, site }) => {
+    await site.open();
+    await site.loaded();
+    await page.locator('.pcw-view-icons .pcw-icon[title="grid view"]').click();
+    await page.waitForTimeout(6500);
+    await expect(page.locator('.pcw-summary')).toBeVisible();
+    await expect(page.locator('.pcw-summary-text')).toHaveText('7 wishlist items · Total value: $1,085.49 (1 with no price)');
+    await expect(page.locator('.pcw-status')).toHaveCount(0);
   });
 
   test('a site-rendered duplicate is removed; one without a twin is kept', async ({ page, site }) => {
@@ -255,6 +273,9 @@ test.describe('Select / Exclude lists', () => {
 test.describe('Move to collection', () => {
   for (const view of ['list', 'grid']) {
     test.describe(`in ${view} view`, () => {
+      const L = view === 'grid'
+        ? { idle: 'Move to collection', armed: 'Click again to confirm', failed: 'Failed — try again' }
+        : { idle: 'Move', armed: 'Confirm?', failed: 'Failed, retry' };
       test.beforeEach(async ({ page, site }) => {
         await site.open();
         await site.loaded();
@@ -264,8 +285,9 @@ test.describe('Move to collection', () => {
 
       test('arms on first click, then adds and removes the card', async ({ page, site }) => {
         const btn = page.locator('tr#bid-2 .pcw-btn-move');
+        await expect(btn).toHaveText(L.idle, { useInnerText: true });
         await btn.click();
-        await expect(btn).toHaveText('Click again to confirm');
+        await expect(btn).toHaveText(L.armed, { useInnerText: true });
         expect(site.apiCalls).toEqual([]);
         await btn.click();
         await expect(page.locator('tr#bid-2')).toHaveCount(0);
@@ -278,8 +300,8 @@ test.describe('Move to collection', () => {
       test('resets after 4 seconds without a second click', async ({ page, site }) => {
         const btn = page.locator('tr#bid-2 .pcw-btn-move');
         await btn.click();
-        await expect(btn).toHaveText('Click again to confirm');
-        await expect(btn).toHaveText('Move to collection', { timeout: 6000 });
+        await expect(btn).toHaveText(L.armed, { useInnerText: true });
+        await expect(btn).toHaveText(L.idle, { useInnerText: true, timeout: 6000 });
         expect(site.apiCalls).toEqual([]);
         await expect(page.locator('tr#bid-2')).toHaveCount(1);
       });
@@ -289,7 +311,7 @@ test.describe('Move to collection', () => {
         const btn = page.locator('tr#bid-2 .pcw-btn-move');
         await btn.click();
         await btn.click();
-        await expect(btn).toHaveText('Failed — try again');
+        await expect(btn).toHaveText(L.failed, { useInnerText: true });
         await expect(page.locator('tr#bid-2')).toHaveCount(1);
         expect(await page.evaluate(() => window.__removed)).toEqual([]);
       });
@@ -313,6 +335,31 @@ test.describe('Move to collection', () => {
 
     await page.locator('.pcw-view-icons .pcw-icon[title="list view"]').click();
     await expect(page.locator('tr#bid-2 td.expand .pcw-btn-move')).toBeVisible();
+  });
+
+  test('in list view, Remove matches the other buttons and lines up with Move', async ({ page, site }) => {
+    await site.open();
+    await site.loaded();
+    const styles = (sel) => page.locator(sel).evaluate((el) => {
+      const c = getComputedStyle(el);
+      return { font: c.fontSize, weight: c.fontWeight, pad: c.padding, radius: c.borderRadius, shadow: c.boxShadow, width: el.getBoundingClientRect().width };
+    });
+    const remove = await styles('tr#bid-2 td.expand input.js-cancel-bid');
+    const move = await styles('tr#bid-2 .pcw-btn-move');
+    const select = await styles('tr#bid-2 .pcw-btn-select');
+    expect(remove.font).toBe(select.font);
+    expect(remove.weight).toBe(select.weight);
+    expect(remove.pad).toBe(select.pad);
+    expect(remove.radius).toBe(select.radius);
+    expect(remove.shadow).toBe('none');
+    expect(Math.abs(remove.width - move.width)).toBeLessThan(1);
+  });
+
+  test('grid view keeps its own Remove and Move styling', async ({ page, site }) => {
+    await site.open();
+    await site.loaded();
+    await page.locator('.pcw-view-icons .pcw-icon[title="grid view"]').click();
+    await expect(page.locator('tr#bid-2 .pcw-btn-move')).toHaveText('Move to collection', { useInnerText: true });
   });
 
   test('a card added after loading gets its Move button under Remove in list view', async ({ page, site }) => {
