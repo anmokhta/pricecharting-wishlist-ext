@@ -1,8 +1,6 @@
 # Changelog
 
-User-facing changes in each release. Every version in `extension/manifest.json` needs a section here before it can be released: CI checks for it and uses it as the GitHub Release notes.
-
-Format: `## <version> — <YYYY-MM-DD>` followed by any of **New**, **Changed** and **Fixed**, each a short bullet list written for people using the extension (not code details; those go in ROADMAP.md → Completed).
+What changed in each version of Wishlist Grid View for PriceCharting.
 
 ## 1.4.6 — 2026-11-15
 
