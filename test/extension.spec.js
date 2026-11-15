@@ -18,7 +18,6 @@ const test = base.extend({
     const context = await chromium.launchPersistentContext(dir, {
       channel: 'chromium',
       headless: true,
-      acceptDownloads: true,
       args: [`--disable-extensions-except=${EXTENSION}`, `--load-extension=${EXTENSION}`]
     });
     await use(context);
@@ -257,16 +256,12 @@ test.describe('Select / Exclude lists', () => {
     await expect(page.locator('tr#bid-1 .pcw-btn-exclude')).toBeVisible();
   });
 
-  test('exclude mode shows the remaining total and exports a CSV', async ({ page, site }) => {
+  test('exclude mode shows the remaining total, with no export option', async ({ page, site }) => {
     await site.open();
     await site.loaded();
     await page.locator('tr#bid-6 .pcw-btn-exclude').click();
     await expect(page.locator('.pcw-pick-panel span')).toHaveText('1 card excluded · Remaining total: $215.00');
-    const [download] = await Promise.all([page.waitForEvent('download'), page.locator('.pcw-pick-export').click()]);
-    expect(download.suggestedFilename()).toMatch(/^wishlist-excluded-\d{4}-\d{2}-\d{2}\.csv$/);
-    const csv = fs.readFileSync(await download.path(), 'utf8');
-    expect(csv).toContain('"Eevee","Fossil","870.49"');
-    expect(csv).toContain('"Remaining total (wishlist minus excluded)","215.00"');
+    await expect(page.locator('.pcw-pick-panel button')).toHaveText(['Clear']);
   });
 });
 

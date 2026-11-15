@@ -207,7 +207,7 @@
   }
 
   // ---- Pick-list: tag cards green (keep) or red (exclude), with a running
-  // total and an export of whichever list you're building. Only one color is
+  // total of whichever list you're building. Only one color is
   // active at a time — picking one hides the other everywhere on the page
   // until you clear it. State is per wishlist (by id) and survives reloads.
   const fmtMoney = (n) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -259,41 +259,6 @@
     return { id: row.id, name, set, price: priceOf(row) };
   }
 
-  function downloadText(filename, text) {
-    const blob = new Blob([text], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
-  const csvCell = (v) => '"' + String(v).replace(/"/g, '""') + '"';
-
-  function exportPicks() {
-    const rows = [...tbody.querySelectorAll('tr.item')].map(rowInfo);
-    const grandTotal = rows.reduce((s, r) => s + (isNaN(r.price) ? 0 : r.price), 0);
-    const picked = rows.filter((r) => picks.ids.has(r.id));
-    const lines = [['Name', 'Set', 'Price'].map(csvCell).join(',')];
-    picked.forEach((r) => lines.push([r.name, r.set, isNaN(r.price) ? '' : r.price.toFixed(2)].map(csvCell).join(',')));
-    lines.push('');
-    if (picks.mode === 'select') {
-      const total = picked.reduce((s, r) => s + (isNaN(r.price) ? 0 : r.price), 0);
-      lines.push(['Selected items', picked.length].map(csvCell).join(','));
-      lines.push(['Total', total.toFixed(2)].map(csvCell).join(','));
-    } else {
-      const excludedTotal = picked.reduce((s, r) => s + (isNaN(r.price) ? 0 : r.price), 0);
-      const remaining = grandTotal - excludedTotal;
-      lines.push(['Excluded items', picked.length].map(csvCell).join(','));
-      lines.push(['Wishlist total', grandTotal.toFixed(2)].map(csvCell).join(','));
-      lines.push(['Remaining total (wishlist minus excluded)', remaining.toFixed(2)].map(csvCell).join(','));
-    }
-    const stamp = new Date().toISOString().slice(0, 10);
-    downloadText(`wishlist-${picks.mode === 'select' ? 'selected' : 'excluded'}-${stamp}.csv`, lines.join('\r\n'));
-  }
-
   const pickPanel = document.createElement('div');
   pickPanel.className = 'pcw-pick-panel';
   table.parentElement.insertBefore(pickPanel, table);
@@ -328,17 +293,12 @@
     pickPanel.innerHTML = '';
     const span = document.createElement('span');
     span.textContent = text;
-    const exportBtn = document.createElement('button');
-    exportBtn.type = 'button';
-    exportBtn.className = 'pcw-pick-export';
-    exportBtn.textContent = 'Export CSV';
-    exportBtn.onclick = exportPicks;
     const clearBtn = document.createElement('button');
     clearBtn.type = 'button';
     clearBtn.className = 'pcw-pick-clear';
     clearBtn.textContent = 'Clear';
     clearBtn.onclick = () => { picks.clear(); updatePickUI(); };
-    pickPanel.append(span, exportBtn, clearBtn);
+    pickPanel.append(span, clearBtn);
   }
 
   function addPickButtons() {

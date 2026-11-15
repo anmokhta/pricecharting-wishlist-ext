@@ -1,6 +1,6 @@
 # Wishlist Grid View for PriceCharting
 
-A Chrome extension (Manifest V3) that fixes and extends the [PriceCharting](https://www.pricecharting.com) wishlist page: correct price sorting across the whole wishlist, a card grid view, search, running totals, pick lists with CSV export, and a one-step "Move to collection".
+A Chrome extension (Manifest V3) that fixes and extends the [PriceCharting](https://www.pricecharting.com) wishlist page: correct price sorting across the whole wishlist, a card grid view, search, running totals, Select/Exclude pick lists, and a one-step "Move to collection".
 
 It is content-script only: no background worker, no popup, and no declared permissions. It only runs on `https://www.pricecharting.com/wishlist*`.
 
@@ -17,7 +17,6 @@ It is content-script only: no background worker, no popup, and no declared permi
 | **Count and total value** | A blue box above the list always shows the number of items and their combined value, plus how many have no price. While pages load it shows progress; if a page fails it shows a **Retry** button. The yellow Select/Exclude panel is separate. |
 | **Search** | Filter by card name or set. Every word you type must match. Press <kbd>Esc</kbd> to clear. The count and total follow the search. |
 | **Select / Exclude lists** | Each card gets *Select* and *Exclude* buttons. Build a list of cards to keep (green, with its total) or cards to drop (red, with the remaining wishlist total). Only one mode is active at a time. Picks are saved per wishlist and survive reloads. |
-| **Export CSV** | Downloads the current pick list as `wishlist-selected-YYYY-MM-DD.csv` or `wishlist-excluded-YYYY-MM-DD.csv`, with summary totals. |
 | **Move to collection** | A button on every card, in both list and grid view (in list view it's a short **Move** button under Remove, styled to match). Adds the card to your PriceCharting collection using your default condition (by design; there is no per-card condition choice), then removes it from the wishlist. Click once to arm, again within 4 seconds to confirm. The wishlist removal only happens if the add succeeds. |
 | **Usable Remove button** | The site's bare `-` button is relabeled **Remove** and stays visible in grid view. |
 | **Set filter label fix** | The Set filter's placeholder says "Type part of console" (a PriceCharting leftover from video games); it's relabeled to "Type part of set". |
@@ -149,7 +148,7 @@ npx playwright install chromium
 npm test
 ```
 
-The tests in [test/extension.spec.js](test/extension.spec.js) load the real unpacked extension into headless Chromium and answer every `www.pricecharting.com` request with fake pages from [test/fixtures.js](test/fixtures.js), so nothing touches the real site or your account. They cover loading and sorting, duplicate skipping, Retry, late rows, grid view, search, Select/Exclude with CSV export, and Move to collection in both views (confirm, auto-reset, success and failure).
+The tests in [test/extension.spec.js](test/extension.spec.js) load the real unpacked extension into headless Chromium and answer every `www.pricecharting.com` request with fake pages from [test/fixtures.js](test/fixtures.js), so nothing touches the real site or your account. They cover loading and sorting, duplicate skipping, Retry, late rows, grid view, search, Select/Exclude, and Move to collection in both views (confirm, auto-reset, success and failure).
 
 To click around by hand, run `npm run mockup` and open http://localhost:4173/. That page runs the extension's code against the same fake data and has buttons to inject a late card or a duplicate row. Add `?fail=1` to make page 3 fail once.
 

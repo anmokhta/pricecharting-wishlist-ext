@@ -12,7 +12,7 @@ The list-view Move button shipped in 1.4.3–1.4.5 (see Completed). What's left:
 
 - [ ] Register a Chrome Web Store developer account (one-time $5 fee).
 - [ ] Update the privacy policy: it currently says only the grid/list setting is stored. It must also cover pick lists in `localStorage` and the add-to-collection / remove-from-wishlist requests made on user action. Host it at a public URL (this repo is private, so it can't live here unless the repo is made public or the policy is hosted elsewhere, e.g. GitHub Pages from a public repo or a gist).
-- [ ] Refresh the store description to mention search, Select/Exclude lists with CSV export, and Move to collection. Keep the manifest `description` ≤ 132 chars (currently 127).
+- [ ] Refresh the store description to mention search, Select/Exclude lists, and Move to collection. Keep the manifest `description` ≤ 132 chars (currently 127).
 - [ ] Recapture screenshots (existing ones predate pick lists, search and move).
 - [ ] Single-purpose and permissions justification for review (no permissions declared; content script on `pricecharting.com/wishlist*` only).
 - [ ] Upload the zip from the latest GitHub Release and submit for review.
@@ -38,21 +38,28 @@ After selecting or excluding cards, give the selection a name and save it. A con
 - **Names.** Handle empty names, duplicate names (overwrite or reject), very long names, and a cap on how many can be saved.
 - **Prices.** Totals should be recalculated from current prices when loaded, not stored, and the UI should say so.
 - **Interaction with search.** A loaded selection can include cards hidden by the current search. Counts and totals already cover hidden cards; the UI should make that obvious.
-- **Backup.** Consider exporting and importing saved selections (JSON), since browser storage is easy to lose.
+- **Backup.** Consider exporting and importing saved selections (card ids and names only, no prices), since browser storage is easy to lose. Anything that exports price data is out of scope for the public build (see 1.4.6).
 - **Privacy policy.** The Chrome Web Store policy (item 2) must mention saved selections.
 
 ## Backlog
 
+- **CSV export (private build only).** Possibly a separate private branch or build that restores the Export CSV button (removed in 1.4.6). It must never ship in the public Chrome Web Store build.
 - **Safari / iOS port.** No code changes are expected (plain MV3 content script, standard DOM APIs), but it needs:
   - Full Xcode from the App Store (Command Line Tools alone don't include `safari-web-extension-packager`).
   - `xcrun safari-web-extension-packager --copy-resources --app-name "Wishlist Grid View" --bundle-identifier <reverse.dns.id> extension/` to generate the wrapper app.
   - A decision on whether to commit the generated Xcode project (e.g. under `safari/`) or regenerate it in CI.
-  - Testing in macOS Safari (Settings → Developer → Add Temporary Extension), then the iOS Simulator. Check CSV download on iOS and `localStorage` persistence.
+  - Testing in macOS Safari (Settings → Developer → Add Temporary Extension), then the iOS Simulator. Check `localStorage` persistence.
   - A paid Apple Developer membership to run it on a real iPhone or publish it.
 
 ## Completed
 
 Newest first. When a planned or backlog item ships, it moves here.
+
+### 1.4.6 — CSV export removed (2026-11-15)
+
+- **What it does:** removes the "Export CSV" button from the Select/Exclude panel. PriceCharting's terms restrict software that redistributes its price data, and exporting prices to a file is the clearest case of that. Removing it keeps the public Chrome Web Store build low-risk. A private build with CSV export may come later; the code is in git history (1.4.5 and earlier).
+- **Code:** `extension/content.js`: removed `downloadText()`, `csvCell` and `exportPicks()`, and the Export button in `updatePickUI()`. `extension/content.css`: removed the Export button styles.
+- **Tests:** the CSV test now checks the exclude total, and that the panel only offers Clear.
 
 ### 1.4.5 — Totals box and list-view buttons (2026-11-15)
 
