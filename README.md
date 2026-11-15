@@ -65,7 +65,12 @@ extension/                  Everything that ships in the extension
 docs/
   technical-summary.md      Deep dive: DOM model, architecture, testing, history
   debug-session-summary.md  Root-cause write-up of the "bare rows" bug fixed in 1.4.1
-.github/workflows/release.yml   Builds the zip and publishes a GitHub Release
+test/
+  extension.spec.js         Automated end-to-end tests (Playwright)
+  fixtures.js               Fake wishlist pages shared by the tests and the mockup
+  mockup.html               Manual mockup page for trying changes in a browser
+  serve.js                  Tiny static server for the mockup
+.github/workflows/ci.yml    Runs the tests; on main, builds the zip and publishes a Release
 ROADMAP.md                  Planned work and backlog
 ```
 
@@ -80,13 +85,14 @@ ROADMAP.md                  Planned work and backlog
 1. Relabels the Set filter placeholder.
 2. Adds the grid/list toggle and applies the saved view (works before the rest of the list has loaded).
 3. Relabels Remove buttons, inserts the summary, status, pick panel and search box.
-4. Runs `loadAll()`; on success: `purgeSiteRows()` → `sortRows()` → image upgrade → relabel → pick buttons → move buttons → pick UI → search.
+4. Runs `loadAll()`, then `enhanceRows()`: `purgeSiteRows()` → `sortRows()` → image upgrade → relabel → pick buttons → move buttons → pick UI → search. Every step is safe to repeat.
+5. Starts a `MutationObserver` on the table body. Any wishlist row added later (by the site or anything else) triggers `enhanceRows()` again, so it gets the same buttons and is sorted into place.
 
 ### Loading every page
 
-PriceCharting's wishlist is paginated server-side, 200 items per page, using an opaque cursor in `tr.offers-paging form.next_page input[name=cursor]`. `loadAll()` POSTs `cursor=<value>` back to the same URL, parses each response with `DOMParser`, and imports the `tr.item` / `tr.item-details` rows. It stops when no cursor comes back, the cursor repeats, or after 100 pages.
+PriceCharting's wishlist is paginated server-side, 200 items per page, using an opaque cursor in `tr.offers-paging form.next_page input[name=cursor]`. `loadAll()` POSTs `cursor=<value>` back to the same URL, parses each response with `DOMParser`, and imports the `tr.item` / `tr.item-details` rows. It stops when no cursor comes back, the cursor repeats, or after 100 pages. A card that comes back on a second page (same row id) is skipped along with its details row.
 
-The site also has its own infinite scroll that fetches the next page when you near the bottom. To avoid both loaders racing (which produced duplicate, featureless "bare" rows in 1.4.0), the extension removes the paging row at startup so the site has nothing to fetch, and `purgeSiteRows()` drops any class-less row that has a real twin. If the extension's load fails, the paging row is put back so the site's scrolling still works. See [docs/debug-session-summary.md](docs/debug-session-summary.md).
+The site also has its own infinite scroll that fetches the next page when you near the bottom. To avoid both loaders racing (which produced duplicate, featureless "bare" rows in 1.4.0), the extension removes the paging row at startup so the site has nothing to fetch, and `purgeSiteRows()` drops any class-less row that has a real twin. The paging row is never put back: once the site's loader finds it missing, it switches itself off for good. If a page fails to load, the extension keeps what it has and shows a **Retry** button that resumes from the page that failed. See [docs/debug-session-summary.md](docs/debug-session-summary.md).
 
 ### Grid view
 
@@ -116,6 +122,7 @@ All requests are same-origin from the page, using your existing PriceCharting se
 |---|---|
 | `pcw-view` | `grid` or `list` |
 | `pcw-picks-<user>` | `{ mode, ids[] }` for the current pick list |
+| `pcw-debug` | Optional; set to `1` by hand to log per-page row and duplicate counts to the console |
 
 Nothing is sent anywhere other than pricecharting.com.
 
@@ -128,19 +135,32 @@ If PriceCharting changes its markup, these are what break first: `table#active` 
 ## Known issues
 
 - **Move to collection** has not yet been confirmed against the live API; try it first on a card you don't mind moving and check your Collection tab. It always uses your default condition, and only appears in grid view.
-- The item count can differ by one or two from PriceCharting's header (cause unresolved).
-- If loading all pages fails, the fallback path skips the image upgrade and Remove relabel.
+- The item count has been seen to differ by one or two from PriceCharting's header. Duplicate cards across pages are now skipped; to investigate any remaining gap, run `localStorage.setItem('pcw-debug', '1')` in the page's console and reload.
 
 More detail in [docs/technical-summary.md](docs/technical-summary.md) and the backlog in [ROADMAP.md](ROADMAP.md).
 
 ---
 
+## Testing
+
+```bash
+npm install
+npx playwright install chromium
+npm test
+```
+
+The tests in [test/extension.spec.js](test/extension.spec.js) load the real unpacked extension into headless Chromium and answer every `www.pricecharting.com` request with fake pages from [test/fixtures.js](test/fixtures.js), so nothing touches the real site or your account. They cover loading and sorting, duplicate skipping, Retry, late rows, grid view, search, Select/Exclude with CSV export, and Move to collection (success and failure).
+
+To click around by hand, run `npm run mockup` and open http://localhost:4173/. That page runs the extension's code against the same fake data and has buttons to inject a late card or a duplicate row. Add `?fail=1` to make page 3 fail once.
+
+---
+
 ## Releasing
 
-Every push to `main` that touches `extension/` runs [`.github/workflows/release.yml`](.github/workflows/release.yml), which:
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs the tests on every push and pull request. On a push to `main`, once the tests pass, it:
 
 1. Reads `version` from `extension/manifest.json`.
 2. Zips the contents of `extension/` into `pricecharting-wishlist-v<version>.zip`.
 3. Publishes it to the GitHub Release tagged `v<version>`, creating the release if it's new or replacing the zip if it already exists.
 
-So: **bump `version` in `extension/manifest.json` for a new release**; pushes without a bump refresh the current release's zip. The workflow can also be run manually from the Actions tab. Zips are never committed to the repo.
+So: **bump `version` in `extension/manifest.json` for a new release**; pushes without a bump refresh the current release's zip. If the tests fail, nothing is published. The workflow can also be run manually from the Actions tab. Zips are never committed to the repo.

@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wishlist Mockup</title>
+<link rel="stylesheet" href="../extension/content.css">
+<style>
+  body { font-family: -apple-system, system-ui, sans-serif; margin: 16px; background: #fff; color: #222; }
+  .mock-bar { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    margin: -16px -16px 16px; padding: 10px 16px; background: #222; color: #eee; font-size: 13px; }
+  .mock-bar button { font-size: 12px; padding: 4px 10px; cursor: pointer; }
+  .mock-bar a { color: #9cf; }
+  #mock-log { font: 12px ui-monospace, monospace; white-space: pre-wrap; background: #f4f4f4; padding: 8px; margin-top: 16px; }
+</style>
+</head>
+<body>
+<!--
+  Manual mockup of the PriceCharting wishlist page. Run `npm run mockup` and
+  open http://localhost:4173/. It loads the real extension/content.js and
+  content.css against fake data from fixtures.js, with fetch stubbed so
+  nothing leaves the page. Add ?fail=1 to make page 3 fail once (Retry button).
+-->
+<script src="fixtures.js"></script>
+<script>
+  (function () {
+    const F = window.PCWFixtures;
+    const params = new URLSearchParams(location.search);
+    let failOnce = params.get('fail') === '1';
+    const log = (msg) => { (window.__mockLog = window.__mockLog || []).push(msg); const el = document.getElementById('mock-log'); if (el) el.textContent += msg + '\n'; };
+
+    // Render the initial page (page 1 + cursor for page 2) into this document.
+    const doc = new DOMParser().parseFromString(F.wishlistDocument({ items: F.scenario.page1, cursor: 'c2' }), 'text/html');
+    document.body.insertAdjacentHTML('beforeend', doc.body.innerHTML);
+
+    const pages = {
+      c2: F.wishlistDocument({ items: F.scenario.page2, cursor: 'c3' }),
+      c3: F.wishlistDocument({ items: F.scenario.page3 })
+    };
+    window.fetch = async (url, opts = {}) => {
+      await new Promise((r) => setTimeout(r, 300)); // look like a network
+      if (String(url).includes('/api/offer-publish')) { log('POST ' + url); return new Response('{}', { status: 200 }); }
+      const cursor = new URLSearchParams(opts.body).get('cursor');
+      if (cursor === 'c3' && failOnce) { failOnce = false; log('cursor c3 → 500 (simulated failure)'); return new Response('error', { status: 500 }); }
+      log('cursor ' + cursor + ' → 200');
+      return new Response(pages[cursor], { status: 200 });
+    };
+
+    // Stand-in for the site's delegated Remove handler (market_ae.js).
+    document.addEventListener('click', (e) => {
+      if (e.target.matches('.js-cancel-bid')) log('site Remove clicked for ' + e.target.closest('tr').id);
+    });
+  })();
+</script>
+<script src="../extension/content.js"></script>
+<script>
+  (function () {
+    const F = window.PCWFixtures;
+    const bar = document.createElement('div');
+    bar.className = 'mock-bar';
+    bar.innerHTML = '<strong>Mockup</strong>' +
+      '<button id="mock-late">Add late card</button>' +
+      '<button id="mock-bare">Add bare duplicate of Mew</button>' +
+      '<a href="?fail=1">Reload with page 3 failing once</a>' +
+      '<a href="?">Reload normally</a>';
+    document.body.prepend(bar);
+    const log = document.createElement('div');
+    log.id = 'mock-log';
+    log.textContent = (window.__mockLog || []).join('\n') + '\n';
+    document.body.append(log);
+    let nextId = 100;
+    const tbody = document.querySelector('table#active tbody');
+    document.getElementById('mock-late').onclick = () => {
+      const id = nextId++;
+      tbody.insertAdjacentHTML('beforeend', F.itemRow({ id, name: 'Late Card ' + id, set: 'Late Set', price: 42 + id }));
+    };
+    document.getElementById('mock-bare').onclick = () => {
+      tbody.insertAdjacentHTML('afterbegin', F.siteRow({ id: 5, name: 'Mew', set: 'Promo', price: 120 }));
+    };
+  })();
+</script>
+</body>
+</html>

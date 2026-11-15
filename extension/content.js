@@ -118,11 +118,11 @@
   // before it. If that races with loadAll(), the page-2 cards show up twice and
   // the site's copies never get the extension's features. So take the paging
   // row out of the page up front: with no form.next_page, the site's scroll
-  // handler finds nothing to fetch and stops. We keep the node so we can put it
-  // back if our own loading fails.
+  // handler finds nothing to fetch and stops. It never comes back: once the
+  // site's fetch_next() sees no form it unbinds its scroll handler for good, so
+  // a failed load is resumed by our own Retry button instead (see run()).
   const initialCursor = cursorIn(tbody);
-  const detachedPaging = pagingRow();
-  detachedPaging?.remove();
+  pagingRow()?.remove();
 
   // Safety net: drop a site-rendered wishlist row (no .item class) ONLY when a
   // real tr.item with the same id exists, i.e. it is a true duplicate. A row
@@ -134,10 +134,20 @@
     });
   }
 
+  // Paging state lives outside loadAll() so a failed load can resume from the
+  // page that failed. pendingCursor only advances after a page is inserted.
+  let pendingCursor = initialCursor;
+  let pagesLoaded = 1;
+  let dupesSkipped = 0;
+  const debug = (() => { try { return localStorage.getItem('pcw-debug') === '1'; } catch (e) { return false; } })();
+  if (debug) console.log(`[pcw] page 1: ${tbody.querySelectorAll(':scope > tr.item').length} rows`);
+
   async function loadAll() {
-    let cursor = initialCursor;
-    let pages = 1;
-    while (cursor && pages < MAX_PAGES) {
+    // Cursor paging over a price sort can return the same card on two pages
+    // (ties at a page boundary). Keep the first copy of each row id only.
+    const seen = new Set([...tbody.querySelectorAll(':scope > tr.item')].map((r) => r.id));
+    while (pendingCursor && pagesLoaded < MAX_PAGES) {
+      const cursor = pendingCursor;
       status.textContent = `Loading all wishlist items… (${tbody.querySelectorAll('tr.item').length} so far)`;
       const res = await fetch(location.href, {
         method: 'POST',
@@ -151,10 +161,24 @@
       const rows = [...doc.querySelectorAll('table#active > tbody > tr')].filter(
         (r) => r.classList.contains('item') || r.classList.contains('item-details')
       );
-      const anchor = pagingRow();
-      rows.forEach((r) => tbody.insertBefore(document.importNode(r, true), anchor));
-      cursor = next === cursor ? null : next;
-      pages++;
+      let added = 0;
+      let dupes = 0;
+      let skipDetails = false;
+      rows.forEach((r) => {
+        if (r.classList.contains('item')) {
+          skipDetails = !!r.id && seen.has(r.id);
+          if (skipDetails) { dupes++; return; }
+          if (r.id) seen.add(r.id);
+          added++;
+        } else if (skipDetails) {
+          return; // the item-details row paired with a skipped duplicate
+        }
+        tbody.insertBefore(document.importNode(r, true), pagingRow());
+      });
+      dupesSkipped += dupes;
+      pagesLoaded++;
+      if (debug) console.log(`[pcw] page ${pagesLoaded}: ${added + dupes} rows, ${added} new, ${dupes} duplicate`);
+      pendingCursor = next === cursor ? null : next;
     }
   }
 
@@ -440,8 +464,13 @@
     if (e.key === 'Escape') { searchInput.value = ''; queryRaw = ''; query = ''; applySearch(); }
   });
 
-  loadAll()
-    .then(() => {
+  // ---- One pass that brings every row up to date. Each step is idempotent
+  // (button inserts skip rows that already have them), so it is safe to run
+  // after the initial load, after a partial load, and for rows added later.
+  let enhancing = false;
+  function enhanceRows() {
+    enhancing = true;
+    try {
       purgeSiteRows();
       sortRows();
       upgradeImages(table.classList.contains('pcw-grid'));
@@ -450,18 +479,49 @@
       addMoveButtons();
       updatePickUI();
       applySearch();
-      status.textContent = `Showing all ${tbody.querySelectorAll('tr.item').length} wishlist items` +
-        (sort === 'lowest-price' || sort === 'highest-price' ? ', sorted by price.' : '.');
-      setTimeout(() => status.remove(), 6000);
-    })
-    .catch((e) => {
-      // Hand pagination back to the site so scrolling can still load the rest.
-      if (detachedPaging && !pagingRow()) tbody.appendChild(detachedPaging);
-      sortRows();
-      addPickButtons();
-      addMoveButtons();
-      updatePickUI();
-      applySearch();
-      status.textContent = 'Could not load all pages (' + e.message + '). Showing what loaded.';
-    });
+    } finally {
+      observer.takeRecords(); // drop the mutations our own sort just caused
+      enhancing = false;
+    }
+  }
+
+  // Rows that show up after the load (from the site or anything else) get the
+  // same treatment. Only direct children of tbody are watched, so the cells we
+  // add inside rows don't retrigger this.
+  let enhanceQueued = false;
+  const observer = new MutationObserver((mutations) => {
+    if (enhancing || enhanceQueued) return;
+    const rowAdded = mutations.some((m) =>
+      [...m.addedNodes].some((n) => n.nodeType === 1 && n.matches('tr[id^="bid-"]')));
+    if (!rowAdded) return;
+    enhanceQueued = true;
+    requestAnimationFrame(() => { enhanceQueued = false; enhanceRows(); });
+  });
+
+  function run() {
+    observer.disconnect();
+    loadAll()
+      .then(() => {
+        enhanceRows();
+        const n = tbody.querySelectorAll('tr.item').length;
+        status.textContent = `Showing all ${n} wishlist items` +
+          (sort === 'lowest-price' || sort === 'highest-price' ? ', sorted by price.' : '.');
+        if (debug) console.log(`[pcw] done: ${n} items, ${dupesSkipped} duplicate${dupesSkipped === 1 ? '' : 's'} skipped`);
+        setTimeout(() => status.remove(), 6000);
+      })
+      .catch((e) => {
+        // Keep what loaded and offer to resume from the page that failed.
+        enhanceRows();
+        const n = tbody.querySelectorAll('tr.item').length;
+        status.textContent = `Loaded ${n} wishlist items, but the next page failed (${e.message}). `;
+        const retry = document.createElement('button');
+        retry.type = 'button';
+        retry.className = 'pcw-retry';
+        retry.textContent = 'Retry';
+        retry.onclick = run;
+        status.appendChild(retry);
+      })
+      .finally(() => observer.observe(tbody, { childList: true }));
+  }
+  run();
 })();

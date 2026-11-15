@@ -23,8 +23,9 @@ Today the Move button only appears in grid view (`td.pcw-move` is hidden in list
 
 ## Backlog
 
-- `MutationObserver` on the wishlist `tbody` that re-applies relabel, pick/move buttons and the summary to rows that arrive late (covers unknown sources beyond the infinite-scroll race fixed in 1.4.1).
-- Item-count drift: the page header and the paginated fetch occasionally disagree by one or two items. Investigate.
-- `.catch` fallback path skips `upgradeImages` and `relabelRemoveButtons`.
-- Test the `.catch` path (re-attaching the paging row) and confirm `infinite_scrolling_is_done()` has no side effects the page needs.
-- Safari / iOS port via `xcrun safari-web-extension-packager` (temporary macOS install first, then the iOS Simulator).
+- **Safari / iOS port.** No code changes are expected (plain MV3 content script, standard DOM APIs), but it needs:
+  - Full Xcode from the App Store (Command Line Tools alone don't include `safari-web-extension-packager`).
+  - `xcrun safari-web-extension-packager --copy-resources --app-name "Wishlist Grid View" --bundle-identifier <reverse.dns.id> extension/` to generate the wrapper app.
+  - A decision on whether to commit the generated Xcode project (e.g. under `safari/`) or regenerate it in CI.
+  - Testing in macOS Safari (Settings → Developer → Add Temporary Extension), then the iOS Simulator. Check CSV download on iOS and `localStorage` persistence.
+  - A paid Apple Developer membership to run it on a real iPhone or publish it.
