@@ -1,8 +1,9 @@
 name: CI
 
-# Every push and pull request runs the tests. Pushes to main also build the
-# extension zip and publish it to the GitHub Release for the manifest version,
-# but only if the tests passed.
+# Every push and pull request checks that CHANGELOG.md has notes for the
+# manifest version and runs the tests. Pushes to main also build the extension
+# zip and publish it to the GitHub Release for that version, with the
+# CHANGELOG notes as the release description, but only if the checks passed.
 on:
   push:
   pull_request:
@@ -21,6 +22,9 @@ jobs:
         with:
           node-version: 24
           cache: npm
+
+      - name: Check release notes for this version
+        run: node scripts/release-notes.js
 
       - name: Install dependencies
         run: npm ci
@@ -77,14 +81,17 @@ jobs:
           TAG: v${{ steps.meta.outputs.version }}
           ZIP: ${{ steps.meta.outputs.zip }}
         run: |
+          # Release notes come from this version's section in CHANGELOG.md.
+          node scripts/release-notes.js > release-notes.md
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "$ZIP" --clobber
-            echo "Updated $ZIP on existing release $TAG"
+            gh release edit "$TAG" --notes-file release-notes.md
+            echo "Updated $ZIP and notes on existing release $TAG"
           else
             gh release create "$TAG" "$ZIP" \
               --target "$GITHUB_SHA" \
               --title "$TAG" \
-              --generate-notes \
+              --notes-file release-notes.md \
               --latest
             echo "Created release $TAG"
           fi

@@ -67,7 +67,7 @@ After selecting or excluding cards, give the selection a name and save it. A con
 
 ## Completed
 
-Newest first. When a planned or backlog item ships, it moves here.
+Newest first. When a planned or backlog item ships, it moves here. This section is the developer view (code and tests); the short user-facing notes for each version go in [CHANGELOG.md](CHANGELOG.md), which CI requires before a release and uses as the GitHub Release description.
 
 ### 1.4.6 — CSV export removed (2026-11-15)
 

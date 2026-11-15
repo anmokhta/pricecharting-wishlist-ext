@@ -72,7 +72,9 @@ test/
   serve.js                  Tiny static server for the mockup
 screencaps/                 Chrome Web Store screenshots (originals + 1280x800/ upload copies)
 .github/workflows/ci.yml    Runs the tests; on main, builds the zip and publishes a Release
-ROADMAP.md                  Planned work and backlog
+ROADMAP.md                  Planned work, backlog, and completed work (developer detail)
+CHANGELOG.md                User-facing release notes for every version
+scripts/release-notes.js    Prints a version's CHANGELOG notes; CI uses it
 ```
 
 ---
@@ -158,10 +160,32 @@ To click around by hand, run `npm run mockup` and open http://localhost:4173/. T
 
 ## Releasing
 
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs the tests on every push and pull request. On a push to `main`, once the tests pass, it:
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push and pull request. It first checks that [CHANGELOG.md](CHANGELOG.md) has notes for the version in `extension/manifest.json`, then runs the tests. On a push to `main`, once both pass, it:
 
 1. Reads `version` from `extension/manifest.json`.
 2. Zips the contents of `extension/` into `pricecharting-wishlist-v<version>.zip`.
-3. Publishes it to the GitHub Release tagged `v<version>`, creating the release if it's new or replacing the zip if it already exists.
+3. Publishes it to the GitHub Release tagged `v<version>`, creating the release if it's new or replacing the zip if it already exists. The release description is that version's CHANGELOG section.
 
-So: **bump `version` in `extension/manifest.json` for a new release**; pushes without a bump refresh the current release's zip. If the tests fail, nothing is published. The workflow can also be run manually from the Actions tab. Zips are never committed to the repo.
+**Every release needs release notes.** To ship a new version:
+
+1. Bump `version` in `extension/manifest.json`.
+2. Add a section at the top of `CHANGELOG.md`:
+
+   ```markdown
+   ## 1.4.7 — 2026-11-20
+
+   ### New
+   - Short description of a new feature, written for people using the extension.
+
+   ### Changed
+   - Something that works differently now.
+
+   ### Fixed
+   - A bug that's fixed.
+   ```
+
+   Use only the headings that apply; at least one with a bullet is required. Run `node scripts/release-notes.js` to check it.
+3. Add the developer-side entry (code and tests) to ROADMAP.md → Completed.
+4. Push to `main`.
+
+Without the CHANGELOG section, CI fails and nothing is published. Pushes without a version bump refresh the current release's zip and notes. If the tests fail, nothing is published. The workflow can also be run manually from the Actions tab. Zips are never committed to the repo.
