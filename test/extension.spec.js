@@ -296,13 +296,30 @@ test.describe('Move to collection', () => {
     });
   }
 
-  test('in list view, the button stays compact next to Select/Exclude', async ({ page, site }) => {
+  test('in list view, the button sits under Remove; in grid view, in its own cell', async ({ page, site }) => {
     await site.open();
     await site.loaded();
-    const box = await page.locator('tr#bid-2 .pcw-btn-move').boundingBox();
-    const pick = await page.locator('tr#bid-2 td.pcw-pick-actions').boundingBox();
+    const btn = page.locator('tr#bid-2 .pcw-btn-move');
+    await expect(page.locator('tr#bid-2 td.expand .pcw-btn-move')).toHaveCount(1);
+    await expect(page.locator('tr#bid-2 td.pcw-move')).toBeHidden();
+    const remove = await page.locator('tr#bid-2 td.expand input.js-cancel-bid').boundingBox();
+    const box = await btn.boundingBox();
+    expect(box.y).toBeGreaterThanOrEqual(remove.y + remove.height - 1);
     expect(box.width).toBeLessThan(200);
-    expect(box.x).toBeGreaterThanOrEqual(pick.x + pick.width - 1);
-    expect(Math.abs(box.y + box.height / 2 - (pick.y + pick.height / 2))).toBeLessThan(10);
+
+    await page.locator('.pcw-view-icons .pcw-icon[title="grid view"]').click();
+    await expect(page.locator('tr#bid-2 td.pcw-move .pcw-btn-move')).toBeVisible();
+    await expect(page.locator('tr#bid-2 td.expand .pcw-btn-move')).toHaveCount(0);
+
+    await page.locator('.pcw-view-icons .pcw-icon[title="list view"]').click();
+    await expect(page.locator('tr#bid-2 td.expand .pcw-btn-move')).toBeVisible();
+  });
+
+  test('a card added after loading gets its Move button under Remove in list view', async ({ page, site }) => {
+    await site.open();
+    await site.loaded();
+    await page.evaluate((html) => document.querySelector('table#active tbody').insertAdjacentHTML('beforeend', html),
+      F.itemRow({ id: 60, name: 'Late Card', price: 2 }));
+    await expect(page.locator('tr#bid-60 td.expand .pcw-btn-move')).toBeVisible();
   });
 });

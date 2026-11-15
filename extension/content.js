@@ -47,6 +47,7 @@
     bList.classList.toggle('pcw-selected', v !== 'grid');
     store.set(v);
     upgradeImages(v === 'grid');
+    placeMoveButtons();
   };
   bList.onclick = () => setView('list');
   bGrid.onclick = () => setView('grid');
@@ -424,6 +425,20 @@
       td.appendChild(b);
       const anchor = row.querySelector('.pcw-pick-actions') || row.querySelector('td.price') || row.lastElementChild;
       anchor.insertAdjacentElement('afterend', td);
+    });
+    placeMoveButtons();
+  }
+
+  // Where the Move button sits depends on the view: in list view it goes under
+  // the Remove button in the row's first (td.expand) cell; in grid view it goes
+  // in its own td.pcw-move cell, which the card layout orders above Remove.
+  // Moving the element keeps its click handler and armed/moving state.
+  function placeMoveButtons() {
+    const grid = table.classList.contains('pcw-grid');
+    table.querySelectorAll('tr.item').forEach((row) => {
+      const btn = row.querySelector('.pcw-btn-move');
+      const target = row.querySelector(grid ? 'td.pcw-move' : 'td.expand');
+      if (btn && target && btn.parentElement !== target) target.appendChild(btn);
     });
   }
 

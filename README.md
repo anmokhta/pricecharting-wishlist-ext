@@ -18,7 +18,7 @@ It is content-script only: no background worker, no popup, and no declared permi
 | **Search** | Filter by card name or set. Every word you type must match. Press <kbd>Esc</kbd> to clear. The count and total follow the search. |
 | **Select / Exclude lists** | Each card gets *Select* and *Exclude* buttons. Build a list of cards to keep (green, with its total) or cards to drop (red, with the remaining wishlist total). Only one mode is active at a time. Picks are saved per wishlist and survive reloads. |
 | **Export CSV** | Downloads the current pick list as `wishlist-selected-YYYY-MM-DD.csv` or `wishlist-excluded-YYYY-MM-DD.csv`, with summary totals. |
-| **Move to collection** | A button on every card, in both list and grid view. Adds the card to your PriceCharting collection using your default condition (by design; there is no per-card condition choice), then removes it from the wishlist. Click once to arm, again within 4 seconds to confirm. The wishlist removal only happens if the add succeeds. |
+| **Move to collection** | A button on every card, in both list and grid view (in list view it sits under the Remove button). Adds the card to your PriceCharting collection using your default condition (by design; there is no per-card condition choice), then removes it from the wishlist. Click once to arm, again within 4 seconds to confirm. The wishlist removal only happens if the add succeeds. |
 | **Usable Remove button** | The site's bare `-` button is relabeled **Remove** and stays visible in grid view. |
 | **Set filter label fix** | The Set filter's placeholder says "Type part of console" (a PriceCharting leftover from video games); it's relabeled to "Type part of set". |
 
