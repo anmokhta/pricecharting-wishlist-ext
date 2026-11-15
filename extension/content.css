@@ -1,0 +1,125 @@
+.pcw-status { margin: 6px 0; padding: 6px 10px; font-size: 13px; background: #eef4ff; border: 1px solid #b7cdf5; border-radius: 4px; color: #234; }
+.pcw-summary { margin: 4px 0 10px; font-size: 15px; font-weight: bold; color: #222; }
+.pcw-search { margin: 6px 0; }
+.pcw-search input {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 420px;
+  padding: 7px 10px;
+  font-size: 14px;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+}
+/* Cards filtered out by the search box (must beat the grid's display rules) */
+table#active tr.pcw-hidden { display: none !important; }
+
+/* Same look as PriceCharting's own view toggle */
+.pcw-view-icons { display: inline-block; vertical-align: middle; margin-left: 20px; }
+.pcw-view-icons .pcw-icon { float: left; margin: 5px 5px 0; padding: 2px; line-height: 0; border-radius: 5px; cursor: pointer; }
+.pcw-view-icons .pcw-icon.pcw-selected { background-color: #bbb; }
+.pcw-view-icons .pcw-icon:hover, .pcw-view-icons .pcw-icon.pcw-selected:hover { background-color: #999; }
+.pcw-view-icons .pcw-icon img { width: 22px; height: 22px; }
+
+/* Grid cards styled like the search-results grid */
+table#active.pcw-grid, table#active.pcw-grid > tbody { display: block; width: 100%; }
+table#active.pcw-grid > tbody { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
+table#active.pcw-grid > tbody > tr:not(.item) { display: none; }
+table#active.pcw-grid > tbody > tr.item { display: flex; flex-direction: column; padding: 10px; border: 1px solid #ccc; border-radius: 10px; background: transparent; }
+table#active.pcw-grid tr.item > td { display: block; width: auto; padding: 0; border: 0; background: transparent; }
+table#active.pcw-grid tr.item > td.watchtower { display: none; }
+
+/* Keep only the Remove control from the expand column, as a plain button under the price. */
+table#active.pcw-grid tr.item > td.expand { display: block !important; order: 6; width: 100% !important; margin-top: 6px; }
+
+/* "Move to collection" button: grid view only */
+td.pcw-move { display: none; }
+table#active.pcw-grid tr.item > td.pcw-move { display: block !important; order: 5; width: 100% !important; margin-top: 6px; padding: 0 !important; }
+.pcw-btn-move {
+  display: block;
+  width: 100%;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #fff;
+  background: #7a4fd0;
+  cursor: pointer;
+}
+.pcw-btn-move:hover { background: #6640b3; }
+.pcw-btn-move[data-state="armed"] { background: #e08a00; }
+.pcw-btn-move:disabled { opacity: 0.7; cursor: default; }
+table#active.pcw-grid tr.item > td.expand input.js-expand-bid,
+table#active.pcw-grid tr.item > td.expand input.js-shrink-bid { display: none !important; }
+table#active.pcw-grid tr.item > td.expand input.js-cancel-bid {
+  display: inline-block !important;
+  width: 100% !important; height: auto !important;
+  padding: 5px 0 !important; margin: 0 !important;
+  border-radius: 4px;
+  font-size: 12px;
+}
+table#active.pcw-grid tr.item > td.photo { order: 1; height: 240px; width: 100% !important; max-width: none !important; box-sizing: border-box; }
+table#active.pcw-grid tr.item > td.photo > div { width: 100% !important; height: 240px; display: flex; align-items: center; justify-content: center; }
+table#active.pcw-grid tr.item > td.photo img { display: block; margin: 0 auto; width: auto; height: auto; max-width: 240px; max-height: 240px; }
+table#active.pcw-grid tr.item > td.meta { order: 2; margin-top: 10px; font-size: 1.2em; }
+table#active.pcw-grid tr.item > td.meta p.title { margin: 0; font-style: italic; }
+table#active.pcw-grid tr.item > td.meta p.title > a { font-style: normal; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+table#active.pcw-grid tr.item > td.price { order: 3; font-size: 1.2em; font-weight: bold; margin-bottom: 10px; text-align: left !important; padding: 0 !important; }
+table#active.pcw-grid tr.item > td.pcw-pick-actions { display: flex !important; order: 4; width: 100% !important; gap: 6px; padding: 0 !important; }
+
+/* Pick buttons: green to keep/select, red to exclude. Shown in both list and grid view. */
+td.pcw-pick-actions { white-space: nowrap; }
+.pcw-btn-select, .pcw-btn-exclude {
+  display: inline-block;
+  flex: 1;
+  padding: 5px 10px;
+  margin-right: 6px;
+  border: 0;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #fff;
+  cursor: pointer;
+}
+.pcw-btn-select { background: #2e9e4f; }
+.pcw-btn-select:hover { background: #268143; }
+.pcw-btn-exclude { background: #d13b3b; margin-right: 0; }
+.pcw-btn-exclude:hover { background: #b52f2f; }
+
+/* Picking a color hides the opposite color everywhere on the page. */
+table#active.pcw-mode-select .pcw-btn-exclude { display: none !important; }
+table#active.pcw-mode-exclude .pcw-btn-select { display: none !important; }
+
+tr.item.pcw-picked-select { outline: 2px solid #2e9e4f; outline-offset: -2px; }
+tr.item.pcw-picked-exclude { outline: 2px solid #d13b3b; outline-offset: -2px; opacity: 0.6; }
+table#active.pcw-grid tr.item.pcw-picked-select,
+table#active.pcw-grid tr.item.pcw-picked-exclude { outline-offset: -1px; }
+
+.pcw-pick-panel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 4px 0 10px;
+  padding: 8px 12px;
+  background: #fff7e6;
+  border: 1px solid #f0d58c;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #222;
+}
+.pcw-pick-panel[hidden] { display: none; }
+.pcw-pick-export, .pcw-pick-clear {
+  font-size: 12px;
+  font-weight: bold;
+  padding: 5px 12px;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #fff;
+}
+.pcw-pick-export { background: #1a55b4; }
+.pcw-pick-export:hover { background: #154595; }
+.pcw-pick-clear { background: #777; }
+.pcw-pick-clear:hover { background: #5f5f5f; }

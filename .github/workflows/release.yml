@@ -1,0 +1,60 @@
+name: Build and release extension
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "extension/**"
+      - ".github/workflows/release.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read version from manifest
+        id: meta
+        run: |
+          VERSION=$(jq -r .version extension/manifest.json)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "zip=pricecharting-wishlist-v$VERSION.zip" >> "$GITHUB_OUTPUT"
+
+      - name: Build zip
+        run: |
+          cd extension
+          zip -r "../${{ steps.meta.outputs.zip }}" . -x '.*'
+          cd ..
+          unzip -l "${{ steps.meta.outputs.zip }}"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.meta.outputs.zip }}
+          path: ${{ steps.meta.outputs.zip }}
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ steps.meta.outputs.version }}
+          ZIP: ${{ steps.meta.outputs.zip }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ZIP" --clobber
+            echo "Updated $ZIP on existing release $TAG"
+          else
+            gh release create "$TAG" "$ZIP" \
+              --target "$GITHUB_SHA" \
+              --title "$TAG" \
+              --generate-notes \
+              --latest
+            echo "Created release $TAG"
+          fi
