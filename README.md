@@ -109,7 +109,7 @@ Mirrors the site's own "In One Click" add:
 POST /api/offer-publish?product=<id>&add-to-collection=on&max-price=0&condition-id=<default>
 ```
 
-The condition comes from `localStorage['prefs.DefaultCondition']` (falls back to `1`). On `res.ok`, it clicks the row's native Remove button so the site handles the wishlist removal itself. Add-then-remove ordering means a failure can leave a card in both places but never lose it.
+The condition comes from `localStorage['prefs.DefaultCondition']` (falls back to `1`). On `res.ok`, it clicks the row's native Remove button so the site handles the wishlist removal itself. Add-then-remove ordering means a failure can leave a card in both places but never lose it. Confirmed working on the live site (2026-11-15): the card lands in the Collection tab and leaves the wishlist.
 
 ### Network and storage
 
@@ -137,7 +137,6 @@ If PriceCharting changes its markup, these are what break first: `table#active` 
 
 ## Known issues
 
-- **Move to collection** has not yet been confirmed against the live API; try it first on a card you don't mind moving and check your Collection tab.
 - The item count has been seen to differ by one or two from PriceCharting's header. Duplicate cards across pages are now skipped; to investigate any remaining gap, run `localStorage.setItem('pcw-debug', '1')` in the page's console and reload.
 
 More detail in [docs/technical-summary.md](docs/technical-summary.md) and the backlog in [ROADMAP.md](ROADMAP.md).

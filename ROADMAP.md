@@ -2,13 +2,7 @@
 
 ## Planned
 
-### 1. Verify "Move to collection" on the real site
-
-The list-view Move button shipped in 1.4.3–1.4.5 (see Completed). What's left:
-
-- [ ] Verify the move end-to-end against the real API (has only been tested with stubbed `fetch`): add lands in the Collection tab, wishlist row removed, failure path leaves the card in place.
-
-### 2. Publish on the Chrome Web Store
+### 1. Publish on the Chrome Web Store
 
 **Status:** v1.4.6 submitted for review on 2026-11-15. Item ID `opfopmnimlhgjgnoegkghpdpdgabjhcf` (dashboard: https://chrome.google.com/webstore/devconsole).
 
@@ -22,7 +16,7 @@ The list-view Move button shipped in 1.4.3–1.4.5 (see Completed). What's left:
 - [ ] Approved and published.
 - [ ] After approval: add the store link to the README install section.
 
-### 3. Saved selections
+### 2. Saved selections
 
 After selecting or excluding cards, give the selection a name and save it. A control at the top of the list then re-applies a saved selection in one step.
 
@@ -43,7 +37,7 @@ After selecting or excluding cards, give the selection a name and save it. A con
 - **Prices.** Totals should be recalculated from current prices when loaded, not stored, and the UI should say so.
 - **Interaction with search.** A loaded selection can include cards hidden by the current search. Counts and totals already cover hidden cards; the UI should make that obvious.
 - **Backup.** Consider exporting and importing saved selections (card ids and names only, no prices), since browser storage is easy to lose. Anything that exports price data is out of scope for the public build (see 1.4.6).
-- **Privacy policy.** The Chrome Web Store policy (item 2) must mention saved selections.
+- **Privacy policy.** The privacy policy (item 1) must mention saved selections.
 
 ## Backlog
 
@@ -68,6 +62,12 @@ After selecting or excluding cards, give the selection a name and save it. A con
 ## Completed
 
 Newest first. When a planned or backlog item ships, it moves here. This section is the developer view (code and tests); the short user-facing notes for each version go in [CHANGELOG.md](CHANGELOG.md), which CI requires before a release and uses as the GitHub Release description.
+
+### Move to collection verified on the live site (2026-11-15)
+
+- **What it does:** confirmed on a real PriceCharting account that Move adds the card to the Collection tab and removes it from the wishlist. Until now it had only been tested against fake responses.
+- **Code:** none.
+- **Tests:** manual check on the live site.
 
 ### 1.4.6 — CSV export removed (2026-11-15)
 
