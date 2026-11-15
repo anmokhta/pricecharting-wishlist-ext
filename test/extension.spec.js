@@ -195,7 +195,7 @@ test.describe('page tweaks and view', () => {
     await expect(page.locator('table#active')).toHaveClass(/pcw-grid/);
     await page.locator('.pcw-view-icons .pcw-icon[title="list view"]').click();
     await expect(page.locator('tr#bid-1 td.photo img')).toHaveAttribute('src', /\/60\.jpg$/);
-    await expect(page.locator('tr#bid-1 .pcw-btn-move')).toBeHidden();
+    await expect(page.locator('tr#bid-1 .pcw-btn-move')).toBeVisible();
   });
 });
 
@@ -253,32 +253,56 @@ test.describe('Select / Exclude lists', () => {
 });
 
 test.describe('Move to collection', () => {
-  test('arms on first click, then adds and removes the card', async ({ page, site }) => {
-    await site.open();
-    await site.loaded();
-    await page.locator('.pcw-view-icons .pcw-icon[title="grid view"]').click();
-    const btn = page.locator('tr#bid-2 .pcw-btn-move');
-    await btn.click();
-    await expect(btn).toHaveText('Click again to confirm');
-    expect(site.apiCalls).toEqual([]);
-    await btn.click();
-    await expect(page.locator('tr#bid-2')).toHaveCount(0);
-    await expect(page.locator('tr#details-2')).toHaveCount(0);
-    expect(site.apiCalls).toEqual(['/api/offer-publish?product=2&add-to-collection=on&max-price=0&condition-id=1']);
-    expect(await page.evaluate(() => window.__removed)).toEqual(['bid-2']);
-    await expect(page.locator('.pcw-summary')).toContainText('6 wishlist items');
-  });
+  for (const view of ['list', 'grid']) {
+    test.describe(`in ${view} view`, () => {
+      test.beforeEach(async ({ page, site }) => {
+        await site.open();
+        await site.loaded();
+        await page.locator(`.pcw-view-icons .pcw-icon[title="${view} view"]`).click();
+        await expect(page.locator('tr#bid-2 .pcw-btn-move')).toBeVisible();
+      });
 
-  test('a failed add keeps the card and never removes it', async ({ page, site }) => {
-    site.addStatus = 500;
+      test('arms on first click, then adds and removes the card', async ({ page, site }) => {
+        const btn = page.locator('tr#bid-2 .pcw-btn-move');
+        await btn.click();
+        await expect(btn).toHaveText('Click again to confirm');
+        expect(site.apiCalls).toEqual([]);
+        await btn.click();
+        await expect(page.locator('tr#bid-2')).toHaveCount(0);
+        await expect(page.locator('tr#details-2')).toHaveCount(0);
+        expect(site.apiCalls).toEqual(['/api/offer-publish?product=2&add-to-collection=on&max-price=0&condition-id=1']);
+        expect(await page.evaluate(() => window.__removed)).toEqual(['bid-2']);
+        await expect(page.locator('.pcw-summary')).toContainText('6 wishlist items');
+      });
+
+      test('resets after 4 seconds without a second click', async ({ page, site }) => {
+        const btn = page.locator('tr#bid-2 .pcw-btn-move');
+        await btn.click();
+        await expect(btn).toHaveText('Click again to confirm');
+        await expect(btn).toHaveText('Move to collection', { timeout: 6000 });
+        expect(site.apiCalls).toEqual([]);
+        await expect(page.locator('tr#bid-2')).toHaveCount(1);
+      });
+
+      test('a failed add keeps the card and never removes it', async ({ page, site }) => {
+        site.addStatus = 500;
+        const btn = page.locator('tr#bid-2 .pcw-btn-move');
+        await btn.click();
+        await btn.click();
+        await expect(btn).toHaveText('Failed — try again');
+        await expect(page.locator('tr#bid-2')).toHaveCount(1);
+        expect(await page.evaluate(() => window.__removed)).toEqual([]);
+      });
+    });
+  }
+
+  test('in list view, the button stays compact next to Select/Exclude', async ({ page, site }) => {
     await site.open();
     await site.loaded();
-    await page.locator('.pcw-view-icons .pcw-icon[title="grid view"]').click();
-    const btn = page.locator('tr#bid-2 .pcw-btn-move');
-    await btn.click();
-    await btn.click();
-    await expect(btn).toHaveText('Failed — try again');
-    await expect(page.locator('tr#bid-2')).toHaveCount(1);
-    expect(await page.evaluate(() => window.__removed)).toEqual([]);
+    const box = await page.locator('tr#bid-2 .pcw-btn-move').boundingBox();
+    const pick = await page.locator('tr#bid-2 td.pcw-pick-actions').boundingBox();
+    expect(box.width).toBeLessThan(200);
+    expect(box.x).toBeGreaterThanOrEqual(pick.x + pick.width - 1);
+    expect(Math.abs(box.y + box.height / 2 - (pick.y + pick.height / 2))).toBeLessThan(10);
   });
 });

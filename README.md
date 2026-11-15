@@ -18,7 +18,7 @@ It is content-script only: no background worker, no popup, and no declared permi
 | **Search** | Filter by card name or set. Every word you type must match. Press <kbd>Esc</kbd> to clear. The count and total follow the search. |
 | **Select / Exclude lists** | Each card gets *Select* and *Exclude* buttons. Build a list of cards to keep (green, with its total) or cards to drop (red, with the remaining wishlist total). Only one mode is active at a time. Picks are saved per wishlist and survive reloads. |
 | **Export CSV** | Downloads the current pick list as `wishlist-selected-YYYY-MM-DD.csv` or `wishlist-excluded-YYYY-MM-DD.csv`, with summary totals. |
-| **Move to collection** *(grid view)* | Adds the card to your PriceCharting collection using your default condition, then removes it from the wishlist. Click once to arm, again within 4 seconds to confirm. The wishlist removal only happens if the add succeeds. |
+| **Move to collection** | A button on every card, in both list and grid view. Adds the card to your PriceCharting collection using your default condition (by design; there is no per-card condition choice), then removes it from the wishlist. Click once to arm, again within 4 seconds to confirm. The wishlist removal only happens if the add succeeds. |
 | **Usable Remove button** | The site's bare `-` button is relabeled **Remove** and stays visible in grid view. |
 | **Set filter label fix** | The Set filter's placeholder says "Type part of console" (a PriceCharting leftover from video games); it's relabeled to "Type part of set". |
 
@@ -134,7 +134,7 @@ If PriceCharting changes its markup, these are what break first: `table#active` 
 
 ## Known issues
 
-- **Move to collection** has not yet been confirmed against the live API; try it first on a card you don't mind moving and check your Collection tab. It always uses your default condition, and only appears in grid view.
+- **Move to collection** has not yet been confirmed against the live API; try it first on a card you don't mind moving and check your Collection tab.
 - The item count has been seen to differ by one or two from PriceCharting's header. Duplicate cards across pages are now skipped; to investigate any remaining gap, run `localStorage.setItem('pcw-debug', '1')` in the page's console and reload.
 
 More detail in [docs/technical-summary.md](docs/technical-summary.md) and the backlog in [ROADMAP.md](ROADMAP.md).
@@ -149,7 +149,7 @@ npx playwright install chromium
 npm test
 ```
 
-The tests in [test/extension.spec.js](test/extension.spec.js) load the real unpacked extension into headless Chromium and answer every `www.pricecharting.com` request with fake pages from [test/fixtures.js](test/fixtures.js), so nothing touches the real site or your account. They cover loading and sorting, duplicate skipping, Retry, late rows, grid view, search, Select/Exclude with CSV export, and Move to collection (success and failure).
+The tests in [test/extension.spec.js](test/extension.spec.js) load the real unpacked extension into headless Chromium and answer every `www.pricecharting.com` request with fake pages from [test/fixtures.js](test/fixtures.js), so nothing touches the real site or your account. They cover loading and sorting, duplicate skipping, Retry, late rows, grid view, search, Select/Exclude with CSV export, and Move to collection in both views (confirm, auto-reset, success and failure).
 
 To click around by hand, run `npm run mockup` and open http://localhost:4173/. That page runs the extension's code against the same fake data and has buttons to inject a late card or a duplicate row. Add `?fail=1` to make page 3 fail once.
 

@@ -358,7 +358,7 @@
     });
   }
 
-  // ---- Move to collection (grid view): adds the card to your PriceCharting
+  // ---- Move to collection (list and grid view): adds the card to your PriceCharting
   // collection the same way the site's own "In One Click" button does, using
   // your default condition, then removes it from the wishlist with the site's
   // own Remove button. The wishlist removal only happens if the add succeeded.

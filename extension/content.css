@@ -31,8 +31,10 @@ table#active.pcw-grid tr.item > td.watchtower { display: none; }
 /* Keep only the Remove control from the expand column, as a plain button under the price. */
 table#active.pcw-grid tr.item > td.expand { display: block !important; order: 6; width: 100% !important; margin-top: 6px; }
 
-/* "Move to collection" button: grid view only */
-td.pcw-move { display: none; }
+/* "Move to collection" button: compact cell next to Select/Exclude in list
+   view; full-width button inside the card in grid view (rule below). */
+td.pcw-move { white-space: nowrap; vertical-align: middle; padding-left: 6px; }
+table#active:not(.pcw-grid) .pcw-btn-move { display: inline-block; width: auto; }
 table#active.pcw-grid tr.item > td.pcw-move { display: block !important; order: 5; width: 100% !important; margin-top: 6px; padding: 0 !important; }
 .pcw-btn-move {
   display: block;

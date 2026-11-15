@@ -4,11 +4,10 @@
 
 ### 1. One-click "Move to collection" in list view
 
-Today the Move button only appears in grid view (`td.pcw-move` is hidden in list view by `content.css`), and it takes two clicks (arm, then confirm).
+"One click" here means click once, then click again to confirm, the same as grid view. Move always uses your PriceCharting default condition.
 
-- [ ] Show a compact Move control in list view rows (fits the table's column layout without breaking the site's header alignment).
-- [ ] Decide on the confirmation model for list view: true single click, or keep the arm/confirm guard (possibly as a setting).
-- [ ] Optional: per-card condition picker instead of always using `prefs.DefaultCondition`.
+- [x] Show a compact Move button in list view rows, next to Select/Exclude (1.4.3).
+- [x] Same click-to-confirm behavior in list and grid view.
 - [ ] Verify the move end-to-end against the real API (has only been tested with stubbed `fetch`): add lands in the Collection tab, wishlist row removed, failure path leaves the card in place.
 
 ### 2. Publish on the Chrome Web Store
