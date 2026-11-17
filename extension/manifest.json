@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Wishlist Grid View for PriceCharting",
-  "version": "1.4.6",
-  "description": "Sorts your whole PriceCharting wishlist by price, adds grid view, search, totals, Select/Exclude lists, and move-to-collection.",
+  "name": "Wishlist+ for PriceCharting",
+  "version": "1.4.7",
+  "description": "Loads your whole PriceCharting wishlist at once and adds grid view, search, totals, Select/Exclude lists, and move-to-collection.",
   "icons": {
     "16": "icon16.png",
     "48": "icon48.png",

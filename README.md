@@ -1,6 +1,6 @@
-# Wishlist Grid View for PriceCharting
+# Wishlist+ for PriceCharting
 
-A Chrome extension (Manifest V3) that fixes and extends the [PriceCharting](https://www.pricecharting.com) wishlist page: correct price sorting across the whole wishlist, a card grid view, search, running totals, Select/Exclude pick lists, and a one-step "Move to collection".
+A Chrome extension (Manifest V3) that fixes and extends the [PriceCharting](https://www.pricecharting.com) wishlist page: the whole wishlist on one page (so price sorting covers every item, not just the first 200), a card grid view, search, running totals, Select/Exclude pick lists, and a one-step "Move to collection".
 
 It is content-script only: no background worker, no popup, and no declared permissions. It only runs on `https://www.pricecharting.com/wishlist*`.
 
@@ -12,7 +12,7 @@ It is content-script only: no background worker, no popup, and no declared permi
 
 | Feature | What it does |
 |---|---|
-| **Whole-wishlist price sort** | PriceCharting sorts each 200-item page on its own, so "Low to high" restarts on page 2. The extension loads every page up front and re-sorts the entire list when the sort is *Lowest price* or *Highest price*. Items without a price go last. |
+| **Whole wishlist on one page** | PriceCharting loads the wishlist 200 items at a time, so *Lowest price* and *Highest price* only cover the items loaded so far. The extension loads every page up front, so price sorting covers your entire wishlist. Items without a price go last. |
 | **Grid / list toggle** | Two icons next to the sort/filter controls switch between the site's table and a card grid with larger (240px) images. Your choice is remembered. |
 | **Count and total value** | A blue box above the list always shows the number of items and their combined value, plus how many have no price. While pages load it shows progress; if a page fails it shows a **Retry** button. The yellow Select/Exclude panel is separate. |
 | **Search** | Filter by card name or set. Every word you type must match. Press <kbd>Esc</kbd> to clear. The count and total follow the search. |
@@ -160,4 +160,4 @@ To click around by hand, run `npm run mockup` and open http://localhost:4173/. T
 
 ## For developers
 
-How releases are built and published, and how to write release notes for a new version: [docs/releasing.md](docs/releasing.md). What changed in each version: [CHANGELOG.md](CHANGELOG.md).
+How releases are built and published, how to write release notes for a new version, and how to submit a version to the Chrome Web Store: [docs/releasing.md](docs/releasing.md). What changed in each version: [CHANGELOG.md](CHANGELOG.md).

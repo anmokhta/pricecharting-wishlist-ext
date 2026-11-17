@@ -1,0 +1,71 @@
+name: Submit to Chrome Web Store
+
+# Manual only: never runs on push. Takes the zip that CI already built and
+# published to the GitHub Release for the manifest version (so it passed the
+# tests), uploads it to the Chrome Web Store, and submits it for review.
+# Untick "submit" to upload a draft only (useful for testing the credentials).
+# Setup and pitfalls: docs/releasing.md.
+on:
+  workflow_dispatch:
+    inputs:
+      submit:
+        description: Submit for review after uploading (untick to upload a draft only)
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: chrome-web-store
+  cancel-in-progress: false
+
+jobs:
+  submit:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Read version from manifest
+        id: meta
+        run: |
+          VERSION=$(jq -r .version extension/manifest.json)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "zip=pricecharting-wishlist-v$VERSION.zip" >> "$GITHUB_OUTPUT"
+
+      - name: Download the release zip
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          ZIP: ${{ steps.meta.outputs.zip }}
+        run: |
+          if ! gh release view "v$VERSION" >/dev/null 2>&1; then
+            echo "::error::There is no GitHub Release v$VERSION yet. Push the version bump to main and wait for CI to publish it, then run this again."
+            exit 1
+          fi
+          gh release download "v$VERSION" -p "$ZIP"
+          ZIP_VERSION=$(unzip -p "$ZIP" manifest.json | jq -r .version)
+          if [ "$ZIP_VERSION" != "$VERSION" ]; then
+            echo "::error::$ZIP contains version $ZIP_VERSION, expected $VERSION."
+            exit 1
+          fi
+          echo "Using $ZIP from release v$VERSION"
+
+      - name: Upload to the Chrome Web Store
+        env:
+          CWS_SERVICE_ACCOUNT_KEY: ${{ secrets.CWS_SERVICE_ACCOUNT_KEY }}
+          CWS_PUBLISHER_ID: ${{ secrets.CWS_PUBLISHER_ID }}
+          CWS_ITEM_ID: opfopmnimlhgjgnoegkghpdpdgabjhcf
+          ZIP: ${{ steps.meta.outputs.zip }}
+          SUBMIT: ${{ inputs.submit }}
+        run: |
+          if [ "$SUBMIT" = "true" ]; then
+            node scripts/chrome-store.js --zip "$ZIP"
+          else
+            node scripts/chrome-store.js --zip "$ZIP" --no-submit
+          fi

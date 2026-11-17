@@ -1,8 +1,8 @@
-# Privacy Policy — Wishlist Grid View for PriceCharting
+# Privacy Policy - Wishlist+ for PriceCharting
 
 **Effective date:** November 15, 2026
 
-Wishlist Grid View for PriceCharting ("the extension") is a free Chrome extension that improves the wishlist page on PriceCharting.com. It is an independent project and is not affiliated with or endorsed by PriceCharting.
+Wishlist+ for PriceCharting ("the extension") is a free Chrome extension that improves the wishlist page on PriceCharting.com. It is an independent project and is not affiliated with or endorsed by PriceCharting.
 
 **In short:** the extension does not collect, transmit, sell or share any of your data. Everything it does happens in your own browser, on PriceCharting's own wishlist page.
 

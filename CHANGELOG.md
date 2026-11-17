@@ -1,6 +1,12 @@
 # Changelog
 
-What changed in each version of Wishlist Grid View for PriceCharting.
+What changed in each version of Wishlist+ for PriceCharting.
+
+## 1.4.7 — 2026-11-17
+
+### Changed
+- Renamed to "Wishlist+ for PriceCharting".
+- The store description now says what the extension actually fixes: it loads your whole wishlist, so price sorting covers every item.
 
 ## 1.4.6 — 2026-11-15
 

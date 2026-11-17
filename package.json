@@ -1,7 +1,7 @@
 {
   "name": "pricecharting-wishlist-ext",
   "private": true,
-  "description": "Dev tooling for the Wishlist Grid View for PriceCharting extension (tests and mockup). Not shipped in the extension zip.",
+  "description": "Dev tooling for the Wishlist+ for PriceCharting extension (tests and mockup). Not shipped in the extension zip.",
   "scripts": {
     "test": "playwright test",
     "mockup": "node test/serve.js"

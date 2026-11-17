@@ -1,4 +1,4 @@
-# Debug Session Summary: "Bare rows" bug in Wishlist Grid View for PriceCharting (v1.4.0 → v1.4.1)
+# Debug Session Summary: "Bare rows" bug in Wishlist+ for PriceCharting (v1.4.0 → v1.4.1)
 
 Handoff document for a new agent. It covers the problem, the investigation, the root cause, the code changes, what is verified versus unverified, and what is still open.
 
@@ -8,7 +8,7 @@ Related background doc: `wishlist-grid-view-technical-summary.md` (the user uplo
 
 ## 1. Context
 
-- **Project:** a Chrome extension (Manifest V3), "Wishlist Grid View for PriceCharting". It is content-script-only, with no background worker, no popup and no permissions. It runs on `https://www.pricecharting.com/wishlist*`.
+- **Project:** a Chrome extension (Manifest V3), "Wishlist+ for PriceCharting" (then called "Wishlist Grid View for PriceCharting"). It is content-script-only, with no background worker, no popup and no permissions. It runs on `https://www.pricecharting.com/wishlist*`.
 - **Files:** `manifest.json`, `content.js` (a single IIFE), `content.css`, and three icons.
 - **What it does:** loads every wishlist page and sorts globally by price, adds a grid/list toggle, a count and total, Select/Exclude pick lists with CSV export, a search box, and a grid-view-only "Move to collection" button.
 - **User:** the extension's owner, who had it installed in Chrome and was on their own wishlist page (`/wishlist`), sorted `highest-price`.

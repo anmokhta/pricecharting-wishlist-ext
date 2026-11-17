@@ -15,6 +15,8 @@
 - [x] Uploaded the v1.4.6 zip from GitHub Releases and submitted for review (2026-11-15).
 - [ ] Approved and published.
 - [ ] After approval: add the store link to the README install section.
+- [ ] Set up the service account and GitHub secrets for the "Submit to Chrome Web Store" action (docs/releasing.md → One-time setup).
+- [ ] After 1.4.6 clears review: run the action to submit 1.4.7 (the rename). The store listing name comes from the manifest. Check the dashboard listing text still matches the new name.
 
 ### 2. Saved selections
 
@@ -41,20 +43,10 @@ After selecting or excluding cards, give the selection a name and save it. A con
 
 ## Backlog
 
-- **Automated Chrome Web Store uploads from CI.** Today each new version means downloading the zip from GitHub Releases and uploading it by hand. Plan:
-  - **Google side:** in a Google Cloud project, enable the Chrome Web Store API, create an OAuth client, and generate a refresh token for the publisher account.
-  - **GitHub side:** store the client ID, client secret, refresh token and item ID as repository secrets (never in the repo).
-  - **CI:** a `store` job in `.github/workflows/ci.yml` that runs after `release`, only on `main`, and only when the release job *created* a new version, not when it replaced a zip. The store rejects re-uploading the same version anyway. It uploads the zip, then either submits it for review automatically or leaves it as a draft for a manual click. Start with draft-only until the flow is trusted.
-  - **Pitfalls:**
-    - An upload fails while a previous version is still in review, so the job should report that clearly, not break the release.
-    - Every submission goes through review again.
-    - The API only updates the package; listing text, screenshots and privacy answers stay manual.
-    - Check which version of the Chrome Web Store API is current when implementing, since Google has revised it.
-    - The refresh token can expire if unused or revoked, so add a manual `workflow_dispatch` run to test it.
 - **CSV export (private build only).** Possibly a separate private branch or build that restores the Export CSV button (removed in 1.4.6). It must never ship in the public Chrome Web Store build.
 - **Safari / iOS port.** No code changes are expected (plain MV3 content script, standard DOM APIs), but it needs:
   - Full Xcode from the App Store (Command Line Tools alone don't include `safari-web-extension-packager`).
-  - `xcrun safari-web-extension-packager --copy-resources --app-name "Wishlist Grid View" --bundle-identifier <reverse.dns.id> extension/` to generate the wrapper app.
+  - `xcrun safari-web-extension-packager --copy-resources --app-name "Wishlist+" --bundle-identifier <reverse.dns.id> extension/` to generate the wrapper app.
   - A decision on whether to commit the generated Xcode project (e.g. under `safari/`) or regenerate it in CI.
   - Testing in macOS Safari (Settings → Developer → Add Temporary Extension), then the iOS Simulator. Check `localStorage` persistence.
   - A paid Apple Developer membership to run it on a real iPhone or publish it.
@@ -68,6 +60,12 @@ Newest first. When a planned or backlog item ships, it moves here. This section 
 - **What it does:** confirmed on a real PriceCharting account that Move adds the card to the Collection tab and removes it from the wishlist. Until now it had only been tested against fake responses.
 - **Code:** none.
 - **Tests:** manual check on the live site.
+
+### 1.4.7 — Rename and manual store submission (2026-11-17)
+
+- **What it does:** renames the extension to "Wishlist+ for PriceCharting" and rewords the description around what it fixes (the whole wishlist loads, so price sorting covers every item). Adds a manual GitHub Action, "Submit to Chrome Web Store", that uploads the tested release zip for the current version and submits it for review. It never runs on push.
+- **Code:** `extension/manifest.json`: name, description, version. New `.github/workflows/store.yml` (`workflow_dispatch` only, `main` only; downloads the `v<version>` release zip and checks its manifest version). New `scripts/chrome-store.js`: signs a service-account JWT with `node:crypto`, then calls Chrome Web Store API v2 `fetchStatus` → `upload` → `publish`; refuses while another version is pending review. Docs renamed throughout; setup and pitfalls in `docs/releasing.md`.
+- **Tests:** `test/chrome-store.spec.js` (8 tests, fake Google API): JWT claims and signature, upload then publish, `--no-submit` draft, pending-review refusal, polling an in-progress upload, failed upload, HTTP error message, missing secrets.
 
 ### 1.4.6 — CSV export removed (2026-11-15)
 

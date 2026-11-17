@@ -1,4 +1,4 @@
-# Wishlist Grid View for PriceCharting: Technical Summary
+# Wishlist+ for PriceCharting: Technical Summary
 
 Chrome extension (Manifest V3), current version **1.4.0**. Content-script-only; no background worker, no popup, no declared permissions.
 
@@ -17,7 +17,7 @@ Features were then added in this order:
 
 | Version | Added |
 |---|---|
-| ≤1.1.0 | Cross-page price sort fix; grid/list toggle; item count and total value; working Remove button in grid view; `Type part of console` → `Type part of set` placeholder relabel; rename to "Wishlist Grid View for PriceCharting"; generated icons |
+| ≤1.1.0 | Cross-page price sort fix; grid/list toggle; item count and total value; working Remove button in grid view; `Type part of console` → `Type part of set` placeholder relabel; rename to "Wishlist Grid View for PriceCharting" (renamed to "Wishlist+ for PriceCharting" after 1.4.6); generated icons |
 | 1.2.0 | Select/Exclude pick lists with running totals, localStorage persistence, CSV export |
 | 1.3.0 | Search box (name and set); manifest description cut to ≤132 chars |
 | 1.4.0 | "Move to collection" button (grid view only) |
@@ -254,7 +254,7 @@ Tooling quirks:
 
 ### Chrome Web Store (prepared, not submitted)
 
-- Name: "Wishlist Grid View for PriceCharting". It was renamed to avoid implying official affiliation.
+- Name: "Wishlist+ for PriceCharting" (previously "Wishlist Grid View for PriceCharting"). The name puts the extension first and PriceCharting second to avoid implying official affiliation.
 - Icons are original artwork: a blue rounded square, a white 2×2 grid motif, and a "P" badge. PriceCharting's own logo was deliberately not used because of trademark and Chrome policy risk.
 - Three screenshots were captured from the live wishlist: grid view with Remove and total, list view sorted by price, and the relabeled Set filter. They predate the pick lists, search, and move features.
 - A privacy policy was drafted and published as a private Claude artifact. It needs its sharing changed to a public URL, plus the update in item 6 above.
@@ -265,7 +265,7 @@ Tooling quirks:
 Per Apple's documentation (these steps have not been run, and no Mac was available from the cloud sandbox):
 
 1. **macOS Safari temporary install.** In Settings → Developer, choose "Add Temporary Extension…". Safari removes it after 24 hours or on quit.
-2. **iOS Simulator.** Run `xcrun safari-web-extension-packager --copy-resources --app-name "Wishlist Grid View" --bundle-identifier <reverse.dns.id> /path/to/unzipped`, then build for an iPhone simulator in Xcode. Enable it in Safari → Extensions.
+2. **iOS Simulator.** Run `xcrun safari-web-extension-packager --copy-resources --app-name "Wishlist+" --bundle-identifier <reverse.dns.id> /path/to/unzipped`, then build for an iPhone simulator in Xcode. Enable it in Safari → Extensions.
 3. **Real iPhone.** Requires Apple Developer Program membership.
 
 Things to watch in Safari: cross-page fetch, `localStorage` persistence, CSV download behavior on iOS, and the page's content-security behavior.
