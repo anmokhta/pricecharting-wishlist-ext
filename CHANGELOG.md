@@ -2,10 +2,11 @@
 
 What changed in each version of Wishlist+ for PriceCharting.
 
-## 1.4.7 — 2026-11-17
+## 1.4.7 — 2026-11-21
 
 ### Changed
 - Renamed to "Wishlist+ for PriceCharting".
+- New icon: a stack of cards with a green "+", replacing the old grid-and-"P" icon.
 - The store description now says what the extension actually fixes: it loads your whole wishlist, so price sorting covers every item.
 
 ## 1.4.6 — 2026-11-15

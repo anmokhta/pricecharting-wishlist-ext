@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Store screenshot 2: whole wishlist</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#ffffff}a:hover{color:#e6f1fc}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; box-sizing: border-box; background: {{blue}}; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #ffffff">
+
+  <div aria-hidden="true" style="position: absolute; left: 760px; top: -260px; width: 820px; height: 720px; border-radius: 120px; background: #0A6AC6; transform: rotate(-12deg)"></div>
+  <div aria-hidden="true" style="position: absolute; left: -170px; top: 520px; width: 380px; height: 380px; border-radius: 76px; border: 2px solid rgba(255,255,255,0.10); transform: rotate(18deg)"></div>
+
+  <div style="position: absolute; left: 80px; top: 56px; display: flex; align-items: center; gap: 14px">
+    <img src="/_blob/52dd5bc4e0e4524552c3eb91e88ef473" alt="Wishlist+ icon" style="width: 44px; height: 44px; display: block; border-radius: 10px; box-shadow: 0 0 0 2px rgba(255,255,255,0.9)">
+    <div style="font-size: 26px; font-weight: 800; letter-spacing: -0.5px">Wishlist<span style="color: {{green}}">+</span></div>
+  </div>
+
+  <div style="position: absolute; left: 80px; top: 128px; width: 1000px; display: flex; flex-direction: column; gap: 12px">
+    <h1 style="margin: 0; font-size: 50px; font-weight: 800; line-height: 1.1; letter-spacing: -1px">Your whole wishlist on one page.</h1>
+    <p style="margin: 0; font-size: 21px; font-weight: 500; line-height: 1.45">Every page loads at once, so price sorting covers every card, with an item count and total value up top.</p>
+  </div>
+
+  <div style="position: absolute; left: 80px; top: 290px; width: 1120px; height: 560px; box-sizing: border-box; border: 6px solid #ffffff; border-radius: 20px; overflow: hidden; background: #ffffff; box-shadow: 0 30px 70px rgba(0,30,70,0.45)">
+    <img src="/_blob/ba12ac44e81262a9a78982bd49131f60" alt="Wishlist in list view with a totals bar reading 9 wishlist items, total value $2,654.55, and rows showing each card's price with Remove, Move, Select and Exclude buttons" style="width: 100%; height: 100%; object-fit: cover; object-position: left top; display: block">
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"blue":{"editor":"color","default":"#0076DF","options":["#0076DF","#0068C4","#005DB8"]},"green":{"editor":"color","default":"#5DAE3A","options":["#5DAE3A","#6CC04A","#4E9A30"]},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      blue: this.props.blue ?? '#0076DF',
+      green: this.props.green ?? '#5DAE3A'
+    };
+  }
+}
+</script>
+</body>
+</html>

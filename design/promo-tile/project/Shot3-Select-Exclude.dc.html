@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Store screenshot 3: select and exclude</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#ffffff}a:hover{color:#e6f1fc}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; box-sizing: border-box; background: {{blue}}; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #ffffff">
+
+  <div aria-hidden="true" style="position: absolute; left: 760px; top: -260px; width: 820px; height: 720px; border-radius: 120px; background: #0A6AC6; transform: rotate(-12deg)"></div>
+  <div aria-hidden="true" style="position: absolute; left: -170px; top: 520px; width: 380px; height: 380px; border-radius: 76px; border: 2px solid rgba(255,255,255,0.10); transform: rotate(18deg)"></div>
+
+  <div style="position: absolute; left: 80px; top: 56px; display: flex; align-items: center; gap: 14px">
+    <img src="/_blob/52dd5bc4e0e4524552c3eb91e88ef473" alt="Wishlist+ icon" style="width: 44px; height: 44px; display: block; border-radius: 10px; box-shadow: 0 0 0 2px rgba(255,255,255,0.9)">
+    <div style="font-size: 26px; font-weight: 800; letter-spacing: -0.5px">Wishlist<span style="color: {{green}}">+</span></div>
+  </div>
+
+  <div style="position: absolute; left: 80px; top: 136px; width: 1120px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <h1 style="margin: 0; font-size: 44px; font-weight: 800; line-height: 1.1; letter-spacing: -1px">Pick what you want.</h1>
+      <div style="display: flex; align-items: center; gap: 12px">
+        <span style="padding: 6px 14px; border-radius: 999px; background: #2E7D32; color: #ffffff; font-size: 16px; font-weight: 800">Select</span>
+        <span style="font-size: 19px; font-weight: 600">Total just these cards.</span>
+      </div>
+      <div style="margin-top: 8px; box-sizing: border-box; border: 6px solid #ffffff; border-radius: 18px; overflow: hidden; background: #ffffff; box-shadow: 0 26px 60px rgba(0,30,70,0.45)">
+        <img src="/_blob/36f32a4e3c333c23d60bb17ad24a7e05" alt="A bar reading 3 cards selected, total $202.24, above seven wishlist rows, the first three outlined in green and marked Selected" style="width: 100%; display: block">
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <h2 style="margin: 0; font-size: 44px; font-weight: 800; line-height: 1.1; letter-spacing: -1px">Skip what you don't.</h2>
+      <div style="display: flex; align-items: center; gap: 12px">
+        <span style="padding: 6px 14px; border-radius: 999px; background: #C62828; color: #ffffff; font-size: 16px; font-weight: 800">Exclude</span>
+        <span style="font-size: 19px; font-weight: 600">Total everything else.</span>
+      </div>
+      <div style="margin-top: 8px; box-sizing: border-box; border: 6px solid #ffffff; border-radius: 18px; overflow: hidden; background: #ffffff; box-shadow: 0 26px 60px rgba(0,30,70,0.45)">
+        <img src="/_blob/24e4cd4b7bc8fa6b62be502980aa7119" alt="A bar reading 1 card excluded, remaining total $2,644.91, above seven wishlist rows, the first one faded and marked Excluded" style="width: 100%; display: block">
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"blue":{"editor":"color","default":"#0076DF","options":["#0076DF","#0068C4","#005DB8"]},"green":{"editor":"color","default":"#5DAE3A","options":["#5DAE3A","#6CC04A","#4E9A30"]},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      blue: this.props.blue ?? '#0076DF',
+      green: this.props.green ?? '#5DAE3A'
+    };
+  }
+}
+</script>
+</body>
+</html>
