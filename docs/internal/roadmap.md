@@ -116,9 +116,11 @@ Newest first. When a planned or backlog item ships, it moves here. This section 
   - The Shift preview uses `pcw-range*` classes, driven by `mouseover` on the table body and Shift `keydown`/`keyup`. It is cleared after a click until the pointer moves to another card.
   - `pickFilter` is `'all'`, `'only'` or `'hide'`, and isn't saved. `applySearch()` is now the single visibility pass: search plus pick filter, and it hides the blue box while a filter is on, unless a load error or Retry is showing.
   - Every pick change re-runs `updatePickUI()` and `applySearch()`.
-- **Tests:** 18 new.
+  - Grid view: `td.pcw-pick-actions` gets `margin-top: auto`, so the button block (Select/Exclude, Move, Remove) sits at the bottom of each card and lines up across a row when a set name wraps.
+- **Tests:** 19 new.
   - Search box: it is alone in its own form; Enter doesn't submit or reload.
   - Shift-click: range down and up in list and grid view, with Select and with Exclude; a range that turns cards off; search-hidden cards skipped; no anchor acts as a normal click; Clear resets the anchor; the range survives a reload; the Shift preview, including the grey "off" preview.
+  - Grid layout: buttons line up across a row and sit at the card's bottom when one card's set name wraps.
   - Filters: Show only selected in list and grid view (blue box hides and returns); Show only excluded; Hide excluded, including excluding while hidden and switching filters; combined with search; un-picking while filtered, and the last un-pick turning the filter off; Clear resets the filter; the filter is off after a reload.
 
 ### Move to collection verified on the live site (2026-11-15)

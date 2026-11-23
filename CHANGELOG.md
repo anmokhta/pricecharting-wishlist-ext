@@ -10,6 +10,7 @@ What changed in each version of Wishlist+ for PriceCharting.
 
 ### Fixed
 - Clicking into the search box right after the page loads no longer freezes the page for a couple of seconds on large wishlists.
+- In grid view, the buttons now sit at the bottom of every card, so they line up even when a card's set name runs onto two lines.
 
 ## 1.4.7 — 2026-11-21
 

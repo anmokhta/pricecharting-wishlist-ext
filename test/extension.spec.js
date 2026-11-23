@@ -589,6 +589,24 @@ test.describe('Move to collection', () => {
     expect(Math.abs(remove.width - move.width)).toBeLessThan(1);
   });
 
+  test('in grid view the buttons sit at the bottom of every card, even when a title wraps', async ({ page, site }) => {
+    await site.open();
+    await site.loaded();
+    await page.locator('.pcw-view-icons .pcw-icon[title="grid view"]').click();
+    // bid-6 and bid-5 share the first grid row; make bid-6's set name wrap.
+    await page.locator('tr#bid-6 td.meta p.title').evaluate((p) => p.append(' & A Very Long Set Name That Wraps Onto Several Lines'));
+    const layout = await page.evaluate(() => ['bid-6', 'bid-5'].map((id) => {
+      const row = document.getElementById(id).getBoundingClientRect();
+      const select = document.querySelector(`#${id} .pcw-btn-select`).getBoundingClientRect();
+      const remove = document.querySelector(`#${id} input.js-cancel-bid`).getBoundingClientRect();
+      return { rowTop: row.top, select: Math.round(select.top), gapBelowRemove: Math.round(row.bottom - remove.bottom) };
+    }));
+    expect(layout[0].rowTop).toBe(layout[1].rowTop); // same grid row
+    expect(layout[0].select).toBe(layout[1].select); // buttons line up
+    expect(layout[0].gapBelowRemove).toBe(layout[1].gapBelowRemove);
+    expect(layout[1].gapBelowRemove).toBeLessThan(20); // Remove sits at the card's bottom
+  });
+
   test('grid view keeps its own Remove and Move styling', async ({ page, site }) => {
     await site.open();
     await site.loaded();

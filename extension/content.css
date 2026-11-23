@@ -97,7 +97,10 @@ table#active.pcw-grid tr.item > td.meta { order: 2; margin-top: 10px; font-size:
 table#active.pcw-grid tr.item > td.meta p.title { margin: 0; font-style: italic; }
 table#active.pcw-grid tr.item > td.meta p.title > a { font-style: normal; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 table#active.pcw-grid tr.item > td.price { order: 3; font-size: 1.2em; font-weight: bold; margin-bottom: 10px; text-align: left !important; padding: 0 !important; }
-table#active.pcw-grid tr.item > td.pcw-pick-actions { display: flex !important; order: 4; width: 100% !important; gap: 6px; padding: 0 !important; }
+/* margin-top:auto pushes the button block (Select/Exclude, Move, Remove) to the
+   bottom of the card, so buttons line up across a row of cards even when a
+   set name wraps onto a second line. */
+table#active.pcw-grid tr.item > td.pcw-pick-actions { display: flex !important; order: 4; width: 100% !important; gap: 6px; padding: 0 !important; margin-top: auto; }
 
 /* Pick buttons: green to keep/select, red to exclude. Shown in both list and grid view. */
 td.pcw-pick-actions { white-space: nowrap; }
