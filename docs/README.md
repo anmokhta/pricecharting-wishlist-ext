@@ -17,7 +17,7 @@ Text written for an upcoming release, not published yet. When that version is su
 
 | File | What it is |
 |---|---|
-| `store-listing-1.4.8.md` | Store listing for 1.4.8: the new name and icon from 1.4.7, plus shift-click ranges, "Show only" / "Hide excluded" and the search fix. Lists exactly what changes from `public/store-listing.md`. |
+| *(none right now)* | The 1.4.8 store listing was entered in the dashboard on 2026-11-23 and is now `public/store-listing.md`. |
 
 ## internal/ — developers only
 
