@@ -7,7 +7,7 @@ All images and artwork for Wishlist+ for PriceCharting. Nothing in this folder s
 | Folder | What's in it |
 |---|---|
 | `icon/` | The extension icon. `icon.svg` is the master (48 px and up), `icon-small.svg` is the simplified 16/32 px version, `icon-128.svg` adds the store's transparent margin. The PNGs are the exact files in `extension/`. `sheet.png` previews every size on light and dark. |
-| `store-listing/` | Ready-to-upload Chrome Web Store art: `promo-tile-1400x560.png` (marquee promo tile) and `screenshot-1…4-*.png` (1280×800). |
+| `store-listing/` | Ready-to-upload Chrome Web Store art: `promo-tile-1400x560.png` (marquee promo tile), `small-promo-tile-440x280.png` (small promo tile) and `screenshot-1…4-*.png` (1280×800). |
 | `source/canvas/` | The store art's source, copied from the Design canvas (one `.dc.html` per image, plus `canvas.json`). |
 | `source/crops/` | The cropped interface images the canvas uses. |
 | `source/captures/` | The original full-resolution screen captures (test account). The crops are cut from these. |

@@ -10,7 +10,7 @@ Text to paste into the dashboard when 1.4.8 is submitted. It replaces [../public
   - Typo fixed in the Select / Exclude bullet: "mark car red" → "mark cards red".
   - Two new bullets after Select / Exclude: **Select a range** and **Show only what you picked**.
   - Everything else (the disclaimer line at the top, wording, punctuation and quote marks) is unchanged.
-- **Images:** upload the new art from `design/current/store-listing/`: the 1400×560 marquee promo tile and screenshots 1–4. Slot 5 (Move to collection) still needs a capture.
+- **Images:** upload the new art from `design/current/store-listing/`: the 440×280 small promo tile, the 1400×560 marquee promo tile and screenshots 1–4. Slot 5 (Move to collection) still needs a capture.
 - **Single purpose:** adds the pick filters and range selection.
 - **Test instructions:** steps 5–6 cover shift-click and the filters.
 - **Unchanged:** category, permission justification, remote code, data usage and certifications, privacy policy URL. The privacy policy itself needs no change: the new filter and the shift-click anchor aren't saved anywhere.

@@ -29,6 +29,7 @@ const BLOBS = {
 // Artboard file -> output name.
 const NAMES = {
   'Main.dc.html': 'promo-tile-1400x560.png',
+  'Small-promo.dc.html': 'small-promo-tile-440x280.png',
   'Shot1-Grid.dc.html': 'screenshot-1-grid.png',
   'Shot2-Whole-wishlist.dc.html': 'screenshot-2-whole-wishlist.png',
   'Shot3-Select-Exclude.dc.html': 'screenshot-3-select-exclude.png',
