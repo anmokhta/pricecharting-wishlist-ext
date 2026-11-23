@@ -154,6 +154,9 @@ State object `picks`: `mode` (`'none' | 'select' | 'exclude'`) and `ids` (a `Set
   - exclude mode: `N cards excluded · Remaining total: $(grand total − excluded total)`
 - **Scope.** Totals iterate over all `tr.item` rows, not just visible ones, so a search never changes pick math.
 - **Clear.** A Clear button resets the mode and the saved state.
+- **Shift-click ranges (1.4.8).** `pickAnchor` (`{id, color}`) is set on each plain click and reset whenever the mode returns to `none`. `rangeTo(row, color)` returns the visible (`:not(.pcw-hidden)`) rows from the anchor to `row` in DOM order. `handlePick()` applies the clicked card's new state to the whole range with `picks.setMany()` (one save). A `mousedown` handler prevents text selection on Shift-clicks.
+- **Shift preview (1.4.8).** While Shift is held, the rows `rangeTo(rowUnderPointer)` would change get `pcw-range` plus `pcw-range-select`/`-exclude` (would turn on) or `pcw-range-off`. It is driven by `mouseover` on the tbody and Shift `keydown`/`keyup`, cleared on `mouseleave`/`blur`, and suppressed after a click until the pointer reaches another card.
+- **Pick filter (1.4.8).** `pickFilter` is `'all' | 'only' | 'hide'` (`'hide'` only offered in exclude mode); it is not saved and resets when the mode returns to `none`. The panel shows `.pcw-pick-filter[data-filter]` buttons; the active one reads "Show all". `applySearch()` applies it together with the search and hides the blue `.pcw-summary` while a filter is on (unless the summary note shows an error or Retry).
 - **Export CSV.** `exportPicks()` builds a CSV with columns `Name,Set,Price` and summary rows, then downloads it through `Blob` + `URL.createObjectURL` + a temporary `<a download>`.
   - Select mode rows: `Selected items`, `Total`.
   - Exclude mode rows: `Excluded items`, `Wishlist total`, `Remaining total (wishlist minus excluded)`.
@@ -164,6 +167,7 @@ State object `picks`: `mode` (`'none' | 'select' | 'exclude'`) and `ids` (a `Set
 ### 4.5 Search (`applySearch`)
 
 - An `<input type="search">` is inserted before the summary. Input is debounced by 120 ms. Escape clears it.
+- The input sits alone in its own `<form class="pcw-search">` (submit is prevented). Without a form, its first focus made Chrome's autofill scan the page's thousands of form-less Watchtower controls, freezing the page for ~3 s (fixed in 1.4.8).
 - The query is lowercased and split on whitespace. A row stays visible only if **every token** is a substring of `(name + ' ' + set).toLowerCase()`.
 - Hidden rows get `.pcw-hidden`, and so does their `item-details` sibling. The CSS rule `table#active tr.pcw-hidden { display:none !important }` is `!important` so it beats the grid's `display:flex`.
 - Rows stay in the DOM, so picks and sorting are unaffected.

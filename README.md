@@ -17,6 +17,8 @@ It is content-script only: no background worker, no popup, and no declared permi
 | **Count and total value** | A blue box above the list always shows the number of items and their combined value, plus how many have no price. While pages load it shows progress; if a page fails it shows a **Retry** button. The yellow Select/Exclude panel is separate. |
 | **Search** | Filter by card name or set. Every word you type must match. Press <kbd>Esc</kbd> to clear. The count and total follow the search. |
 | **Select / Exclude lists** | Each card gets *Select* and *Exclude* buttons. Build a list of cards to keep (green, with its total) or cards to drop (red, with the remaining wishlist total). Only one mode is active at a time. Picks are saved per wishlist and survive reloads. |
+| **Select a range** | Click *Select* (or *Exclude*) on one card, then hold <kbd>Shift</kbd> and click it on another: every card in between gets the same state. While you hold Shift, the cards that would change are outlined (green or red when they'd be picked, grey when they'd be un-picked). Cards hidden by search are skipped. |
+| **Show only / hide picks** | The yellow panel can show only the cards you picked (*Show only selected* / *Show only excluded*) or, in Exclude mode, *Hide excluded* to see just what's left. The blue box steps aside while a filter is on, and the filter resets on reload. |
 | **Move to collection** | A button on every card, in both list and grid view (in list view it's a short **Move** button under Remove, styled to match). Adds the card to your PriceCharting collection using your default condition (by design; there is no per-card condition choice), then removes it from the wishlist. Click once to arm, again within 4 seconds to confirm. The wishlist removal only happens if the add succeeds. |
 | **Usable Remove button** | The site's bare `-` button is relabeled **Remove** and stays visible in grid view. |
 | **Set filter label fix** | The Set filter's placeholder says "Type part of console" (a PriceCharting leftover from video games); it's relabeled to "Type part of set". |
@@ -65,11 +67,10 @@ extension/                  Everything that ships in the extension
   content.js                All behavior, one IIFE, no dependencies
   content.css               Grid layout and extension UI styles
   icon16/32/48/128.png      Extension icon (sources in design/current/icon/)
-docs/
-  technical-summary.md      Deep dive: DOM model, architecture, testing, history
-  debug-session-summary.md  Root-cause write-up of the "bare rows" bug fixed in 1.4.1
-  privacy-policy.md         Privacy policy (published copy: see ROADMAP, Chrome Web Store item)
-  releasing.md              How to release a new version (release notes, CI, store upload)
+docs/                       All written docs (see docs/README.md)
+  public/                   Text that is live now: privacy policy, Chrome Web Store listing
+  drafts/                   Text for the next version, not published yet
+  internal/                 Developer docs: roadmap, release process, technical deep dive
 test/
   extension.spec.js         Automated end-to-end tests (Playwright)
   fixtures.js               Fake wishlist pages shared by the tests and the mockup
@@ -79,7 +80,6 @@ design/                     All images and artwork (see design/README.md)
   current/                  What's in use: icon sources, store listing PNGs, and their sources
   drafts/                   Earlier versions: icon concepts, old store screenshots, unused crops
 .github/workflows/ci.yml    Runs the tests; on main, builds the zip and publishes a Release
-ROADMAP.md                  Planned work, backlog, and completed work (developer detail)
 CHANGELOG.md                User-facing release notes for every version
 scripts/release-notes.js    Prints a version's CHANGELOG notes; CI uses it
 ```
@@ -102,7 +102,7 @@ scripts/release-notes.js    Prints a version's CHANGELOG notes; CI uses it
 
 PriceCharting's wishlist is paginated server-side, 200 items per page, using an opaque cursor in `tr.offers-paging form.next_page input[name=cursor]`. `loadAll()` POSTs `cursor=<value>` back to the same URL, parses each response with `DOMParser`, and imports the `tr.item` / `tr.item-details` rows. It stops when no cursor comes back, the cursor repeats, or after 100 pages. A card that comes back on a second page (same row id) is skipped along with its details row.
 
-The site also has its own infinite scroll that fetches the next page when you near the bottom. To avoid both loaders racing (which produced duplicate, featureless "bare" rows in 1.4.0), the extension removes the paging row at startup so the site has nothing to fetch, and `purgeSiteRows()` drops any class-less row that has a real twin. The paging row is never put back: once the site's loader finds it missing, it switches itself off for good. If a page fails to load, the extension keeps what it has and shows a **Retry** button in the totals box that resumes from the page that failed. See [docs/debug-session-summary.md](docs/debug-session-summary.md).
+The site also has its own infinite scroll that fetches the next page when you near the bottom. To avoid both loaders racing (which produced duplicate, featureless "bare" rows in 1.4.0), the extension removes the paging row at startup so the site has nothing to fetch, and `purgeSiteRows()` drops any class-less row that has a real twin. The paging row is never put back: once the site's loader finds it missing, it switches itself off for good. If a page fails to load, the extension keeps what it has and shows a **Retry** button in the totals box that resumes from the page that failed. See [docs/debug-session-summary.md](docs/internal/debug-session-summary.md).
 
 ### Grid view
 
@@ -146,7 +146,7 @@ If PriceCharting changes its markup, these are what break first: `table#active` 
 
 - The item count has been seen to differ by one or two from PriceCharting's header. Duplicate cards across pages are now skipped; to investigate any remaining gap, run `localStorage.setItem('pcw-debug', '1')` in the page's console and reload.
 
-More detail in [docs/technical-summary.md](docs/technical-summary.md) and the backlog in [ROADMAP.md](ROADMAP.md).
+More detail in [docs/internal/technical-summary.md](docs/internal/technical-summary.md) and the backlog in [the roadmap](docs/internal/roadmap.md).
 
 ---
 
@@ -158,7 +158,7 @@ npx playwright install chromium
 npm test
 ```
 
-The tests in [test/extension.spec.js](test/extension.spec.js) load the real unpacked extension into headless Chromium and answer every `www.pricecharting.com` request with fake pages from [test/fixtures.js](test/fixtures.js), so nothing touches the real site or your account. They cover loading and sorting, duplicate skipping, Retry, late rows, grid view, search, Select/Exclude, and Move to collection in both views (confirm, auto-reset, success and failure).
+The tests in [test/extension.spec.js](test/extension.spec.js) load the real unpacked extension into headless Chromium and answer every `www.pricecharting.com` request with fake pages from [test/fixtures.js](test/fixtures.js), so nothing touches the real site or your account. They cover loading and sorting, duplicate skipping, Retry, late rows, grid view, search, Select/Exclude (including shift-click ranges and the pick filters), and Move to collection in both views (confirm, auto-reset, success and failure).
 
 To click around by hand, run `npm run mockup` and open http://localhost:4173/. That page runs the extension's code against the same fake data and has buttons to inject a late card or a duplicate row. Add `?fail=1` to make page 3 fail once.
 
@@ -166,4 +166,4 @@ To click around by hand, run `npm run mockup` and open http://localhost:4173/. T
 
 ## For developers
 
-How releases are built and published, how to write release notes for a new version, and how to submit a version to the Chrome Web Store: [docs/releasing.md](docs/releasing.md). What changed in each version: [CHANGELOG.md](CHANGELOG.md).
+How releases are built and published, how to write release notes for a new version, and how to submit a version to the Chrome Web Store: [docs/releasing.md](docs/internal/releasing.md). What changed in each version: [CHANGELOG.md](CHANGELOG.md).

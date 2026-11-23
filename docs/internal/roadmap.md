@@ -2,57 +2,7 @@
 
 ## Planned
 
-### 1. Fix the ~2 second freeze on the first click into the search box
-
-Right after the wishlist page loads, the first click into the search box takes about 2 seconds to respond (no cursor, no typing). After that it's instant. This is the most visible rough edge, so it comes first.
-
-- [ ] Reproduce it on the live site and on the mockup, and record a Chrome DevTools **Performance** trace of page load plus the first click, to see what is running during the freeze.
-- [ ] Fix the cause (see below), then confirm the first click responds immediately with a large wishlist (several hundred cards).
-- [ ] Add a test that the search box accepts typing promptly right after load (e.g. type into it as soon as it appears and check the filter applies), so this can't come back unnoticed.
-
-**Likely causes to check first:**
-
-- **The main thread is busy finishing the load.** The search box appears before every page has loaded. `loadAll()` parses each 200-item page with `DOMParser`, imports the rows, and then `enhanceRows()` re-sorts the whole table, upgrades every image, and adds the buttons, in one long synchronous run. A click during that run waits until it ends. Fixes: do the work in smaller chunks that yield between batches (e.g. `requestIdleCallback`/`setTimeout(0)` per page or per few hundred rows), avoid re-running the full sort and image upgrade on every page, and build rows off-DOM before inserting them.
-- **Layout and image work.** Inserting hundreds of rows and swapping image sources forces big layout/paint passes; grid view's 240px images make it heavier. Batch the DOM writes, and lazy-load images (`loading="lazy"`) so off-screen ones don't load at once.
-- **The site's own scripts.** PriceCharting's jQuery handlers (e.g. autocomplete or form handlers in `market_ae.js`) might react to the first focus or to the new input. Check whether the delay remains with the extension's load work disabled.
-- **The MutationObserver.** Each batch of inserted rows can trigger `enhanceRows()` again; make sure the extension's own inserts don't cause repeat passes.
-
-### 2. Shift-click to select or exclude a range
-
-Click **Select** (or **Exclude**) on one card, then hold <kbd>Shift</kbd> and click the same button on a card further down: every card in between gets selected (or excluded) too, like shift-click in a file list. Works in list and grid view.
-
-- [ ] Remember the last card whose Select/Exclude button was clicked (the "anchor"). Shift-click applies the clicked card's new state to every card from the anchor to it, in either direction (up or down).
-- [ ] The range follows the order on screen (the current sort, and later Group by set), and skips cards hidden by search (and collapsed sets, once those exist).
-- [ ] Mirror the clicked card: if shift-clicking turns a card *on*, the whole range turns on; if it turns it *off*, the whole range turns off.
-- [ ] Totals and the saved picks update once for the whole range, not card by card.
-- [ ] Tests: range down and up, in both views, with Select and with Exclude, skipping search-hidden cards, shift-click with no anchor (acts like a normal click), and that picks survive a reload.
-
-**Pitfalls to design around:**
-
-- **Select vs Exclude.** Only one mode is active at a time, and picking one hides the other. Shift-clicking an Exclude button while Select mode is active can't happen (those buttons are hidden), but the anchor must reset when the lists are cleared or the mode changes.
-- **Browser text selection.** Shift-click normally highlights text between the two clicks; prevent that on these buttons only.
-- **Anchor that disappears.** If the anchor card is moved to the collection, removed, or hidden by a new search, fall back to a normal click (and start a new anchor).
-- **Big ranges.** A shift-click across hundreds of cards should update in one pass and save once, so the page doesn't stutter.
-- **Move to collection is excluded.** Range clicks only apply to Select/Exclude; Move and Remove stay one card at a time.
-
-### 3. "Show only picked" filter in the yellow box
-
-A toggle in the yellow Select/Exclude panel that hides every card except the ones currently picked: **Show only selected** in Select mode, **Show only excluded** in Exclude mode. Click it again (or **Show all**) to bring everything back. Useful for reviewing a list before acting on it.
-
-- [ ] Add the toggle next to **Clear** in the yellow panel; its label follows the active mode. Hidden when nothing is picked.
-- [ ] While it's on, only picked cards show, in both list and grid view. The blue totals box is hidden (the yellow panel's count and total describe what's on screen); it comes back when the filter is turned off.
-- [ ] Combine with search: a card shows only if it is picked **and** matches the search.
-- [ ] Turning it off, clearing the picks, or switching modes shows everything again.
-- [ ] Tests: on and off in both views and both modes, combined with search, unpicking a card while filtered (it disappears), clearing picks resets the filter, the blue box hides while filtered and returns after, and the filter is off again after a reload.
-
-**Pitfalls to design around:**
-
-- **Unpicking while filtered.** Clicking Select/Exclude on a visible card un-picks it, so it vanishes right away. That's expected, but if the last picked card is un-picked the list goes empty: turn the filter off automatically.
-- **Exclude mode wording.** "Show only excluded" shows the cards you're *leaving out*; the remaining total in the yellow box describes the hidden cards. Make the label and totals text clear about which set is on screen.
-- **Persistence.** Probably shouldn't survive a reload (like search), so the page never opens looking almost empty.
-- **Interaction with Group by set and shift-click ranges.** Set headers with no picked cards hide; shift-click ranges apply only to visible (picked) cards while filtered.
-
-### 4. Multiple searches ("OR")
+### 1. Multiple searches ("OR")
 
 Search for several things at once, e.g. two Pokémon. A **+** button sits next to the search box. Pressing it (on the main box or any added one) adds a new search box below the main one, with an **×** button on its left to remove it. A card is shown if it matches **any** box. Inside a single box, words still all have to match, as today (`charizard ex` = both words).
 
@@ -71,7 +21,7 @@ Search for several things at once, e.g. two Pokémon. A **+** button sits next t
 - **Overlap with Saved selections and Group by set.** Hidden-by-search cards still count in Select/Exclude totals; a grouped view should hide set headers whose cards are all filtered out by the combined search.
 - **Code.** `applySearch()` in `content.js` uses one `query` string; change it to a list of queries (one per box) with the same per-box token matching, and debounce input from every box the same way.
 
-### 5. Saved selections
+### 2. Saved selections
 
 After selecting or excluding cards, give the selection a name and save it. A control at the top of the list then re-applies a saved selection in one step.
 
@@ -92,9 +42,9 @@ After selecting or excluding cards, give the selection a name and save it. A con
 - **Prices.** Totals should be recalculated from current prices when loaded, not stored, and the UI should say so.
 - **Interaction with search.** A loaded selection can include cards hidden by the current search. Counts and totals already cover hidden cards; the UI should make that obvious.
 - **Backup.** Consider exporting and importing saved selections (card ids and names only, no prices), since browser storage is easy to lose. Anything that exports price data is out of scope for the public build (see 1.4.6).
-- **Privacy policy.** The privacy policy (item 7) must mention saved selections.
+- **Privacy policy.** The privacy policy (see item 4) must mention saved selections.
 
-### 6. Group by set
+### 3. Group by set
 
 A **Group by set** toggle next to the grid/list buttons. When it's on, cards are grouped by set (sets A→Z), and inside each set they follow the sort you've picked: price (low→high or high→low), name, or card number. Like the price sort, it works on the whole wishlist because every page is already loaded. Turning it off returns to the normal ungrouped list.
 
@@ -119,12 +69,12 @@ A **Group by set** toggle next to the grid/list buttons. When it's on, cards are
 - **Late rows.** Rows added after load (the observer path in `enhanceRows()`) must land in the right set, and set headers must never be mistaken for wishlist rows by the purge/dedupe code.
 - **Performance.** Grouping a few thousand rows with string compares is fine, but avoid re-parsing set names and card numbers on every re-sort; cache them on the row.
 
-### 7. Publish on the Chrome Web Store
+### 4. Publish on the Chrome Web Store
 
 **Status:** v1.4.6 approved and live on the [Chrome Web Store](https://chromewebstore.google.com/detail/opfopmnimlhgjgnoegkghpdpdgabjhcf) (seen 2026-11-21; it still shows the old name and icon until 1.4.7 or later is approved). Item ID `opfopmnimlhgjgnoegkghpdpdgabjhcf` (dashboard: https://chrome.google.com/webstore/devconsole).
 
 - [x] Register a Chrome Web Store developer account; contact email set and verified.
-- [x] Privacy policy rewritten (`docs/privacy-policy.md`) and published as a public gist: https://gist.github.com/anmokhta/0dbdab84b479a030717f3584833156b9. When the policy changes, edit `docs/privacy-policy.md` and update the gist with `gh gist edit 0dbdab84b479a030717f3584833156b9 docs/privacy-policy.md`.
+- [x] Privacy policy rewritten (`docs/public/privacy-policy.md`) and published as a public gist: https://gist.github.com/anmokhta/0dbdab84b479a030717f3584833156b9. When the policy changes, edit `docs/public/privacy-policy.md` and update the gist with `gh gist edit 0dbdab84b479a030717f3584833156b9 docs/public/privacy-policy.md`.
 - [x] Store description written (search, Select/Exclude lists, Move to collection, privacy note, not-affiliated line). Category: Functionality & UI.
 - [x] Screenshots captured on the test account; 1280×800 versions (page only, no browser toolbar) are now in `design/drafts/store-listing-v1/` (replaced by the new store art).
 - [x] Privacy practices: single-purpose statement, host-access justification (content script on `pricecharting.com/wishlist*` only; no permissions), no remote code, data usage = website content only, all three certifications.
@@ -132,12 +82,13 @@ A **Group by set** toggle next to the grid/list buttons. When it's on, cards are
 - [x] Uploaded the v1.4.6 zip from GitHub Releases and submitted for review (2026-11-15).
 - [x] Approved and published (live by 2026-11-21).
 - [x] Store link added to the README install section.
-- [ ] Set up the service account and GitHub secrets for the "Submit to Chrome Web Store" action (docs/releasing.md → One-time setup).
+- [ ] Set up the service account and GitHub secrets for the "Submit to Chrome Web Store" action (docs/internal/releasing.md → One-time setup).
 - [ ] Upload the new store art from `design/current/store-listing/` (marquee promo tile 1400×560 and four 1280×800 screenshots), and capture a Move to collection screenshot for the fifth slot.
 - [ ] 1.4.6 has cleared review: run the action to submit 1.4.7 (the rename and new icon). The store listing name comes from the manifest. Check the dashboard listing text still matches the new name.
 
 ## Backlog
 
+- **Freezes while the page loads.** On a 388-card wishlist, loading has two ~575 ms long tasks (`enhanceRows()` sorting, upgrading images and adding buttons over the whole table in one go), and in about half of loads a further ~2.8 s block with no page script or rendering in it (Chrome-internal work; it happens with or without the 1.4.8 search-box form, and with a search box that isn't a form field at all). Ideas: chunk `enhanceRows()` with yields between batches; look for what Chrome is doing in the 2.8 s block with a DevTools Performance trace.
 - **CSV export (private build only).** Possibly a separate private branch or build that restores the Export CSV button (removed in 1.4.6). It must never ship in the public Chrome Web Store build.
 - **Safari / iOS port.** No code changes are expected (plain MV3 content script, standard DOM APIs), but it needs:
   - Full Xcode from the App Store (Command Line Tools alone don't include `safari-web-extension-packager`).
@@ -148,7 +99,27 @@ A **Group by set** toggle next to the grid/list buttons. When it's on, cards are
 
 ## Completed
 
-Newest first. When a planned or backlog item ships, it moves here. This section is the developer view (code and tests); the short user-facing notes for each version go in [CHANGELOG.md](CHANGELOG.md), which CI requires before a release and uses as the GitHub Release description.
+Newest first. When a planned or backlog item ships, it moves here. This section is the developer view (code and tests); the short user-facing notes for each version go in [CHANGELOG.md](../../CHANGELOG.md), which CI requires before a release and uses as the GitHub Release description.
+
+### 1.4.8 — Search-box freeze fixed, shift-click ranges, pick filters (2026-11-22)
+
+- **What it does:**
+  - **Search freeze:** the first click into the search box no longer freezes the page for ~3 s on large wishlists.
+  - **Shift-click ranges:** click Select or Exclude on one card, then Shift-click another to apply the clicked card's new state to every visible card in between. Holding Shift previews the range under the pointer, outlined green or red when cards will be picked and grey when they will be un-picked.
+  - **Pick filters:** the yellow panel has **Show only selected** in Select mode, and **Show only excluded** and **Hide excluded** in Exclude mode. While a filter is on, the blue totals box is hidden.
+- **Cause of the freeze:** Chrome's autofill. The page has ~6,200 inputs and selects (every card's Watchtower controls), almost all outside any `<form>`. The first focus of a form-less field makes autofill gather and analyse all of them; the result is cached, so only the first click was slow. Measured live (388 cards, 5 loads each with Event Timing and Long Task data): first click 2.6–2.8 s with the old form-less box, 0.16–0.6 s in a form. A non-form (contenteditable) box was tried and dropped: no better, and the separate load-time block (see Backlog) happened with every variant.
+- **Code (`content.js`, `content.css`):**
+  - The search box is `<form class="pcw-search" role="search">` with `submit` prevented and `autocomplete="off"`.
+  - `picks.setMany()` saves a whole range at once.
+  - `pickAnchor` is set on each plain Select/Exclude click and reset when nothing is picked.
+  - `rangeTo()` returns the visible cards between the anchor and a card, in either direction; `handlePick()` handles both kinds of click.
+  - The Shift preview uses `pcw-range*` classes, driven by `mouseover` on the table body and Shift `keydown`/`keyup`. It is cleared after a click until the pointer moves to another card.
+  - `pickFilter` is `'all'`, `'only'` or `'hide'`, and isn't saved. `applySearch()` is now the single visibility pass: search plus pick filter, and it hides the blue box while a filter is on, unless a load error or Retry is showing.
+  - Every pick change re-runs `updatePickUI()` and `applySearch()`.
+- **Tests:** 18 new.
+  - Search box: it is alone in its own form; Enter doesn't submit or reload.
+  - Shift-click: range down and up in list and grid view, with Select and with Exclude; a range that turns cards off; search-hidden cards skipped; no anchor acts as a normal click; Clear resets the anchor; the range survives a reload; the Shift preview, including the grey "off" preview.
+  - Filters: Show only selected in list and grid view (blue box hides and returns); Show only excluded; Hide excluded, including excluding while hidden and switching filters; combined with search; un-picking while filtered, and the last un-pick turning the filter off; Clear resets the filter; the filter is off after a reload.
 
 ### Move to collection verified on the live site (2026-11-15)
 
@@ -159,7 +130,7 @@ Newest first. When a planned or backlog item ships, it moves here. This section 
 ### 1.4.7 — Rename, new icon and manual store submission (2026-11-21)
 
 - **What it does:** renames the extension to "Wishlist+ for PriceCharting", replaces the icon (stacked cards with a green "+", no PriceCharting logo elements), and rewords the description around what it fixes (the whole wishlist loads, so price sorting covers every item). Adds a manual GitHub Action, "Submit to Chrome Web Store", that uploads the tested release zip for the current version and submits it for review. It never runs on push.
-- **Code:** `extension/manifest.json`: name, description, version, and a new 32 px icon entry. `extension/icon16/32/48/128.png` redrawn; sources in `design/current/icon/`, concept rounds in `design/drafts/icon-concepts/`. Store art (marquee promo tile and screenshots) in `design/current/store-listing/`, built from `design/current/source/`. New `.github/workflows/store.yml` (`workflow_dispatch` only, `main` only; downloads the `v<version>` release zip and checks its manifest version). New `scripts/chrome-store.js`: signs a service-account JWT with `node:crypto`, then calls Chrome Web Store API v2 `fetchStatus` → `upload` → `publish`; refuses while another version is pending review. Docs renamed throughout; setup and pitfalls in `docs/releasing.md`.
+- **Code:** `extension/manifest.json`: name, description, version, and a new 32 px icon entry. `extension/icon16/32/48/128.png` redrawn; sources in `design/current/icon/`, concept rounds in `design/drafts/icon-concepts/`. Store art (marquee promo tile and screenshots) in `design/current/store-listing/`, built from `design/current/source/`. New `.github/workflows/store.yml` (`workflow_dispatch` only, `main` only; downloads the `v<version>` release zip and checks its manifest version). New `scripts/chrome-store.js`: signs a service-account JWT with `node:crypto`, then calls Chrome Web Store API v2 `fetchStatus` → `upload` → `publish`; refuses while another version is pending review. Docs renamed throughout; setup and pitfalls in `docs/internal/releasing.md`.
 - **Tests:** `test/chrome-store.spec.js` (8 tests, fake Google API): JWT claims and signature, upload then publish, `--no-submit` draft, pending-review refusal, polling an in-progress upload, failed upload, HTTP error message, missing secrets.
 
 ### 1.4.6 — CSV export removed (2026-11-15)
@@ -212,4 +183,4 @@ Newest first. When a planned or backlog item ships, it moves here. This section 
 
 ### 1.4.1 and earlier (before this repo)
 
-Cross-page price sort, grid view, totals, Remove relabel, Set filter label, Select/Exclude lists with CSV export, search, grid-view Move to collection, and the 1.4.1 fix for duplicate "bare" rows. No dates were recorded. See [docs/technical-summary.md](docs/technical-summary.md) and [docs/debug-session-summary.md](docs/debug-session-summary.md).
+Cross-page price sort, grid view, totals, Remove relabel, Set filter label, Select/Exclude lists with CSV export, search, grid-view Move to collection, and the 1.4.1 fix for duplicate "bare" rows. No dates were recorded. See [technical-summary.md](technical-summary.md) and [debug-session-summary.md](debug-session-summary.md).

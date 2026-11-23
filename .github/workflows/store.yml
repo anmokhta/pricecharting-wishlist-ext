@@ -4,7 +4,7 @@ name: Submit to Chrome Web Store
 # published to the GitHub Release for the manifest version (so it passed the
 # tests), uploads it to the Chrome Web Store, and submits it for review.
 # Untick "submit" to upload a draft only (useful for testing the credentials).
-# Setup and pitfalls: docs/releasing.md.
+# Setup and pitfalls: docs/internal/releasing.md.
 on:
   workflow_dispatch:
     inputs:

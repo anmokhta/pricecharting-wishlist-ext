@@ -247,9 +247,24 @@
       else this.ids.add(id);
       if (this.ids.size === 0) this.mode = 'none';
       this.save();
+    },
+    // Shift-click ranges: turn many cards on (or off) at once, saving once.
+    setMany(ids, on, color) {
+      if (this.mode === 'none') this.mode = color;
+      if (this.mode !== color) return;
+      ids.forEach((id) => (on ? this.ids.add(id) : this.ids.delete(id)));
+      if (this.ids.size === 0) this.mode = 'none';
+      this.save();
     }
   };
   picks.load();
+
+  // The last card whose Select/Exclude button was clicked without Shift; a
+  // Shift-click applies the clicked card's new state from here to there.
+  let pickAnchor = null; // { id, color }
+  // Pick filter: 'all', 'only' (show only the picked cards) or 'hide' (hide
+  // them; Exclude mode only). Not saved: a reload shows everything.
+  let pickFilter = 'all';
 
   function rowInfo(row) {
     const titleEl = row.querySelector('td.meta p.title');
@@ -276,6 +291,9 @@
       if (r) r.textContent = on && picks.mode === 'exclude' ? '✕ Excluded' : 'Exclude';
     });
     if (picks.mode === 'none') {
+      // Nothing picked (cleared, or the last card un-picked): start fresh.
+      pickAnchor = null;
+      pickFilter = 'all';
       pickPanel.hidden = true;
       return;
     }
@@ -290,16 +308,97 @@
       const grandTotal = rows.reduce((s, r) => s + (isNaN(r.price) ? 0 : r.price), 0);
       text = `${picked.length} card${picked.length === 1 ? '' : 's'} excluded · Remaining total: ${fmtMoney(grandTotal - pickedTotal)}`;
     }
+    if (pickFilter === 'only') text += picks.mode === 'select' ? ' · Showing only these' : ' · Showing only the excluded cards';
+    if (pickFilter === 'hide') text += ' · Excluded cards hidden';
     pickPanel.innerHTML = '';
     const span = document.createElement('span');
     span.textContent = text;
+    // Filter buttons. Select mode: "Show only selected". Exclude mode: "Show
+    // only excluded" and "Hide excluded". The active one reads "Show all".
+    const filterBtn = (value, label) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'pcw-pick-filter';
+      b.dataset.filter = value;
+      b.textContent = pickFilter === value ? 'Show all' : label;
+      b.setAttribute('aria-pressed', String(pickFilter === value));
+      b.onclick = () => { pickFilter = pickFilter === value ? 'all' : value; updatePickUI(); applySearch(); };
+      return b;
+    };
+    const filterBtns = picks.mode === 'select'
+      ? [filterBtn('only', 'Show only selected')]
+      : [filterBtn('only', 'Show only excluded'), filterBtn('hide', 'Hide excluded')];
     const clearBtn = document.createElement('button');
     clearBtn.type = 'button';
     clearBtn.className = 'pcw-pick-clear';
     clearBtn.textContent = 'Clear';
-    clearBtn.onclick = () => { picks.clear(); updatePickUI(); };
-    pickPanel.append(span, clearBtn);
+    clearBtn.onclick = () => { picks.clear(); updatePickUI(); applySearch(); };
+    pickPanel.append(span, ...filterBtns, clearBtn);
   }
+
+  // The visible cards from the anchor to `row` (either direction), or null when
+  // there is no usable anchor of this color on screen.
+  function rangeTo(row, color) {
+    const anchorRow = pickAnchor && pickAnchor.color === color ? document.getElementById(pickAnchor.id) : null;
+    if (!anchorRow || anchorRow === row || anchorRow.parentElement !== tbody || anchorRow.classList.contains('pcw-hidden')) return null;
+    if (row.classList.contains('pcw-hidden')) return null;
+    const visible = [...tbody.querySelectorAll(':scope > tr.item:not(.pcw-hidden)')];
+    const a = visible.indexOf(anchorRow);
+    const b = visible.indexOf(row);
+    return visible.slice(Math.min(a, b), Math.max(a, b) + 1);
+  }
+  // A shift-click gives the whole range the clicked card's new state.
+  const rangeTurnsOn = (row, color) => !(picks.mode === color && picks.ids.has(row.id));
+
+  // Select/Exclude click. With Shift and an anchor of the same color that is
+  // still on screen, every visible card between the two gets the clicked card's
+  // new state; otherwise it's a plain toggle that also sets the anchor.
+  function handlePick(row, color, shift) {
+    const range = shift ? rangeTo(row, color) : null;
+    if (range) {
+      picks.setMany(range.map((r) => r.id), rangeTurnsOn(row, color), color);
+    } else {
+      picks.toggle(row.id, color);
+      pickAnchor = { id: row.id, color };
+    }
+    clearRangePreview();
+    previewRow = row; // no preview again until the pointer moves to another card
+    previewDone = true;
+    updatePickUI();
+    applySearch();
+  }
+
+  // ---- Shift preview: while Shift is held, outline the cards a shift-click on
+  // the card under the pointer would change (green/red = turn on, grey = off).
+  let shiftHeld = false;
+  let previewRow = null;
+  let previewDone = false;
+  const PREVIEW = ['pcw-range', 'pcw-range-select', 'pcw-range-exclude', 'pcw-range-off'];
+  function clearRangePreview() {
+    tbody.querySelectorAll(':scope > tr.pcw-range').forEach((r) => r.classList.remove(...PREVIEW));
+  }
+  function showRangePreview() {
+    clearRangePreview();
+    if (!shiftHeld || !previewRow || previewDone || !pickAnchor) return;
+    const range = rangeTo(previewRow, pickAnchor.color);
+    if (!range) return;
+    const on = rangeTurnsOn(previewRow, pickAnchor.color);
+    range.forEach((r) => r.classList.add('pcw-range', on ? 'pcw-range-' + pickAnchor.color : 'pcw-range-off'));
+  }
+  tbody.addEventListener('mouseover', (e) => {
+    const row = e.target.closest && e.target.closest('tr.item');
+    if (row && row !== previewRow) { previewRow = row; previewDone = false; }
+    if (e.shiftKey !== shiftHeld) shiftHeld = e.shiftKey;
+    showRangePreview();
+  });
+  table.addEventListener('mouseleave', () => { previewRow = null; clearRangePreview(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Shift' && !shiftHeld) { shiftHeld = true; showRangePreview(); }
+  });
+  document.addEventListener('keyup', (e) => {
+    if (e.key === 'Shift') { shiftHeld = false; previewDone = false; clearRangePreview(); }
+  });
+  window.addEventListener('blur', () => { shiftHeld = false; clearRangePreview(); });
 
   function addPickButtons() {
     tbody.querySelectorAll('tr.item').forEach((row) => {
@@ -310,12 +409,16 @@
       g.type = 'button';
       g.className = 'pcw-btn-select';
       g.textContent = 'Select';
-      g.onclick = () => { picks.toggle(row.id, 'select'); updatePickUI(); };
+      g.onclick = (e) => handlePick(row, 'select', e.shiftKey);
       const r = document.createElement('button');
       r.type = 'button';
       r.className = 'pcw-btn-exclude';
       r.textContent = 'Exclude';
-      r.onclick = () => { picks.toggle(row.id, 'exclude'); updatePickUI(); };
+      r.onclick = (e) => handlePick(row, 'exclude', e.shiftKey);
+      // Shift-click would otherwise highlight the page text between the clicks.
+      const noShiftSelect = (e) => { if (e.shiftKey) e.preventDefault(); };
+      g.addEventListener('mousedown', noShiftSelect);
+      r.addEventListener('mousedown', noShiftSelect);
       td.append(g, r);
       const priceCell = row.querySelector('td.price');
       (priceCell || row.lastElementChild).insertAdjacentElement('afterend', td);
@@ -420,25 +523,40 @@
   // ---- Search box: hides cards whose name/set don't contain every typed word.
   // Hidden cards stay in the page, so Select/Exclude picks and their totals
   // still cover the whole wishlist.
-  const searchWrap = document.createElement('div');
+  // The box sits in its own <form> on purpose. The page has thousands of
+  // form-less controls (every card's Watchtower selects and checkboxes), and the
+  // first time a form-less field gets focus, Chrome's autofill scans all of them
+  // together, which froze the page for ~3 s on a 400-card wishlist. Inside its own
+  // form, autofill only looks at this one field.
+  const searchWrap = document.createElement('form');
   searchWrap.className = 'pcw-search';
+  searchWrap.setAttribute('role', 'search');
+  searchWrap.addEventListener('submit', (e) => e.preventDefault());
   const searchInput = document.createElement('input');
   searchInput.type = 'search';
+  searchInput.autocomplete = 'off';
   searchInput.placeholder = 'Search wishlist by card name or set…';
   searchInput.setAttribute('aria-label', 'Search wishlist');
   searchWrap.appendChild(searchInput);
   table.parentElement.insertBefore(searchWrap, summary);
 
+  // The one visibility pass: a card shows if it matches the search and passes
+  // the pick filter ("Show only selected/excluded" or "Hide excluded").
   function applySearch() {
     const tokens = query.split(/\s+/).filter(Boolean);
+    const filter = picks.mode === 'none' ? 'all' : pickFilter;
     tbody.querySelectorAll('tr.item').forEach((row) => {
       const info = rowInfo(row);
       const hay = (info.name + ' ' + info.set).toLowerCase();
-      const hide = tokens.length > 0 && !tokens.every((t) => hay.includes(t));
+      const hide = (tokens.length > 0 && !tokens.every((t) => hay.includes(t))) ||
+        (filter === 'only' && !picks.ids.has(row.id)) || (filter === 'hide' && picks.ids.has(row.id));
       row.classList.toggle('pcw-hidden', hide);
       const det = row.nextElementSibling;
       if (det && det.classList.contains('item-details')) det.classList.toggle('pcw-hidden', hide);
     });
+    // While filtered, the yellow panel describes what's on screen, so the blue
+    // box steps aside (unless it's showing a load error with Retry).
+    summary.hidden = filter !== 'all' && !summaryNote.textContent;
     updateSummary();
   }
   let searchTimer = null;

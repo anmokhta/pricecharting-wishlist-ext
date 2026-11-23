@@ -66,7 +66,7 @@ async function run({ args = process.argv.slice(2), env = process.env, fetch = gl
     if (!zip) throw new StoreError('Usage: chrome-store.js --zip <file> [--no-submit]');
     const missing = ['CWS_SERVICE_ACCOUNT_KEY', 'CWS_PUBLISHER_ID', 'CWS_ITEM_ID'].filter((k) => !env[k]);
     if (missing.length) {
-      throw new StoreError(`Missing ${missing.join(', ')}. See docs/releasing.md → "One-time setup".`);
+      throw new StoreError(`Missing ${missing.join(', ')}. See docs/internal/releasing.md → "One-time setup".`);
     }
     let key;
     try { key = JSON.parse(env.CWS_SERVICE_ACCOUNT_KEY); } catch { key = null; }

@@ -238,6 +238,33 @@ test.describe('search', () => {
     await box.press('Escape');
     await expect.poll(async () => (await visibleIds(page)).length).toBe(7);
   });
+
+  // The first focus of a form-less field makes Chrome's autofill scan every
+  // form-less control on the page (thousands of Watchtower controls), a ~3 s
+  // freeze. The search box must live in a form of its own.
+  test('the search box is alone in its own form', async ({ page, site }) => {
+    await site.open();
+    await site.loaded();
+    const form = await page.locator('.pcw-search input').evaluate((el) => el.form && {
+      isWrap: el.form.classList.contains('pcw-search'),
+      fields: el.form.elements.length
+    });
+    expect(form).toEqual({ isWrap: true, fields: 1 });
+  });
+
+  test('Enter in the search box does not submit or reload the page', async ({ page, site }) => {
+    await site.open();
+    await site.loaded();
+    const url = page.url();
+    await page.evaluate(() => { window.pcwMarker = 1; });
+    const box = page.locator('.pcw-search input');
+    await box.fill('promo');
+    await box.press('Enter');
+    await expect.poll(() => visibleIds(page)).toEqual(['bid-5', 'bid-7']);
+    expect(await page.evaluate(() => window.pcwMarker)).toBe(1);
+    expect(page.url()).toBe(url);
+    await expect(box).toHaveValue('promo');
+  });
 });
 
 test.describe('Select / Exclude lists', () => {
@@ -261,7 +288,219 @@ test.describe('Select / Exclude lists', () => {
     await site.loaded();
     await page.locator('tr#bid-6 .pcw-btn-exclude').click();
     await expect(page.locator('.pcw-pick-panel span')).toHaveText('1 card excluded · Remaining total: $215.00');
-    await expect(page.locator('.pcw-pick-panel button')).toHaveText(['Clear']);
+    await expect(page.locator('.pcw-pick-panel button')).toHaveText(['Show only excluded', 'Hide excluded', 'Clear']);
+  });
+});
+
+// Sorted order in every test below: bid-6 $870.49, bid-5 $120, bid-3 $50,
+// bid-2 $30, bid-1 $10, bid-4 $5, bid-7 (no price).
+const panelText = (page) => page.locator('.pcw-pick-panel span');
+const pickedIds = (page, color) => page.locator(`table#active tr.item.pcw-picked-${color}`).evaluateAll((rows) => rows.map((r) => r.id));
+const shiftClick = (page, id, color) => page.locator(`tr#${id} .pcw-btn-${color}`).click({ modifiers: ['Shift'] });
+
+test.describe('Shift-click ranges', () => {
+  for (const view of ['list', 'grid']) {
+    test.describe(`in ${view} view`, () => {
+      test.beforeEach(async ({ page, site }) => {
+        await site.open();
+        await site.loaded();
+        await page.locator(`.pcw-view-icons .pcw-icon[title="${view} view"]`).click();
+      });
+
+      test('selects every card from the anchor down to the shift-clicked one', async ({ page }) => {
+        await page.locator('tr#bid-5 .pcw-btn-select').click();
+        await shiftClick(page, 'bid-1', 'select');
+        expect(await pickedIds(page, 'select')).toEqual(['bid-5', 'bid-3', 'bid-2', 'bid-1']);
+        await expect(panelText(page)).toHaveText('4 cards selected · Total: $210.00');
+        expect(await page.evaluate(() => window.getSelection().toString())).toBe('');
+      });
+
+      test('excludes every card from the anchor up to the shift-clicked one', async ({ page }) => {
+        await page.locator('tr#bid-4 .pcw-btn-exclude').click();
+        await shiftClick(page, 'bid-3', 'exclude');
+        expect(await pickedIds(page, 'exclude')).toEqual(['bid-3', 'bid-2', 'bid-1', 'bid-4']);
+        await expect(panelText(page)).toHaveText('4 cards excluded · Remaining total: $990.49');
+      });
+    });
+  }
+
+  test('a range that turns the clicked card off turns the whole range off', async ({ page, site }) => {
+    await site.open();
+    await site.loaded();
+    await page.locator('tr#bid-6 .pcw-btn-select').click();
+    await shiftClick(page, 'bid-2', 'select');
+    expect(await pickedIds(page, 'select')).toEqual(['bid-6', 'bid-5', 'bid-3', 'bid-2']);
+    await page.locator('tr#bid-5 .pcw-btn-select').click(); // un-picks bid-5, new anchor
+    await shiftClick(page, 'bid-2', 'select');
+    expect(await pickedIds(page, 'select')).toEqual(['bid-6']);
+    await expect(panelText(page)).toHaveText('1 card selected · Total: $870.49');
+  });
+
+  test('skips cards hidden by search', async ({ page, site }) => {
+    await site.open();
+    await site.loaded();
+    await page.locator('.pcw-search input').fill('s'); // hides bid-5, bid-4, bid-7
+    await expect.poll(() => visibleIds(page)).toEqual(['bid-6', 'bid-3', 'bid-2', 'bid-1']);
+    await page.locator('tr#bid-6 .pcw-btn-select').click();
+    await shiftClick(page, 'bid-1', 'select');
+    await page.locator('.pcw-search input').press('Escape');
+    expect(await pickedIds(page, 'select')).toEqual(['bid-6', 'bid-3', 'bid-2', 'bid-1']);
+  });
+
+  test('with no anchor, a shift-click is a normal click', async ({ page, site }) => {
+    await site.open();
+    await site.loaded();
+    await shiftClick(page, 'bid-3', 'select');
+    expect(await pickedIds(page, 'select')).toEqual(['bid-3']);
+  });
+
+  test('after Clear, a shift-click starts over instead of using the old anchor', async ({ page, site }) => {
+    await site.open();
+    await site.loaded();
+    await page.locator('tr#bid-6 .pcw-btn-select').click();
+    await page.locator('.pcw-pick-clear').click();
+    await shiftClick(page, 'bid-2', 'select');
+    expect(await pickedIds(page, 'select')).toEqual(['bid-2']);
+  });
+
+  test('holding Shift previews the range under the pointer; releasing it clears the preview', async ({ page, site }) => {
+    await site.open();
+    await site.loaded();
+    const preview = (cls) => page.locator(`table#active tr.item.${cls}`).evaluateAll((rows) => rows.map((r) => r.id));
+    await page.locator('tr#bid-5 .pcw-btn-select').click();
+    await page.keyboard.down('Shift');
+    await page.locator('tr#bid-1 .pcw-btn-select').hover();
+    await expect.poll(() => preview('pcw-range-select')).toEqual(['bid-5', 'bid-3', 'bid-2', 'bid-1']);
+    await page.locator('tr#bid-3 td.meta').hover(); // anywhere on a card
+    await expect.poll(() => preview('pcw-range-select')).toEqual(['bid-5', 'bid-3']);
+    await page.keyboard.up('Shift');
+    await expect.poll(() => preview('pcw-range')).toEqual([]);
+    // A range that would turn cards off previews in grey.
+    await page.locator('tr#bid-1 .pcw-btn-select').click({ modifiers: ['Shift'] });
+    await page.locator('tr#bid-2 .pcw-btn-select').click(); // un-picks bid-2, new anchor
+    await page.keyboard.down('Shift');
+    await page.locator('tr#bid-3 .pcw-btn-select').hover();
+    await expect.poll(() => preview('pcw-range-off')).toEqual(['bid-3', 'bid-2']);
+    await page.keyboard.up('Shift');
+  });
+
+  test('a range is saved and survives a reload', async ({ page, site }) => {
+    await site.open();
+    await site.loaded();
+    await page.locator('tr#bid-5 .pcw-btn-select').click();
+    await shiftClick(page, 'bid-1', 'select');
+    await page.reload();
+    await site.loaded();
+    await expect(panelText(page)).toHaveText('4 cards selected · Total: $210.00');
+    expect(await pickedIds(page, 'select')).toEqual(['bid-5', 'bid-3', 'bid-2', 'bid-1']);
+  });
+});
+
+test.describe('Show only picked', () => {
+  for (const view of ['list', 'grid']) {
+    test(`in ${view} view, shows only selected cards, hides the blue box, and turns off`, async ({ page, site }) => {
+      await site.open();
+      await site.loaded();
+      await page.locator(`.pcw-view-icons .pcw-icon[title="${view} view"]`).click();
+      await page.locator('tr#bid-6 .pcw-btn-select').click();
+      await page.locator('tr#bid-2 .pcw-btn-select').click();
+      const only = page.locator('.pcw-pick-filter[data-filter="only"]');
+      await expect(only).toHaveText('Show only selected');
+      await only.click();
+      await expect.poll(() => visibleIds(page)).toEqual(['bid-6', 'bid-2']);
+      await expect(page.locator('.pcw-summary')).toBeHidden();
+      await expect(panelText(page)).toHaveText('2 cards selected · Total: $900.49 · Showing only these');
+      await expect(only).toHaveText('Show all');
+      await only.click();
+      await expect.poll(async () => (await visibleIds(page)).length).toBe(7);
+      await expect(page.locator('.pcw-summary')).toBeVisible();
+      await expect(only).toHaveText('Show only selected');
+    });
+  }
+
+  test('in exclude mode, shows only the excluded cards', async ({ page, site }) => {
+    await site.open();
+    await site.loaded();
+    await page.locator('tr#bid-7 .pcw-btn-exclude').click();
+    await page.locator('.pcw-pick-filter[data-filter="only"]').click();
+    await expect.poll(() => visibleIds(page)).toEqual(['bid-7']);
+    await expect(panelText(page)).toHaveText('1 card excluded · Remaining total: $1,085.49 · Showing only the excluded cards');
+  });
+
+  test('combines with search: a card must be picked and match', async ({ page, site }) => {
+    await site.open();
+    await site.loaded();
+    await page.locator('tr#bid-6 .pcw-btn-select').click();
+    await page.locator('tr#bid-2 .pcw-btn-select').click();
+    await page.locator('.pcw-pick-filter[data-filter="only"]').click();
+    const box = page.locator('.pcw-search input');
+    await box.fill('squ');
+    await expect.poll(() => visibleIds(page)).toEqual(['bid-2']);
+    await box.press('Escape');
+    await expect.poll(() => visibleIds(page)).toEqual(['bid-6', 'bid-2']);
+    await expect(page.locator('.pcw-summary')).toBeHidden();
+  });
+
+  test('un-picking hides that card; un-picking the last one turns the filter off', async ({ page, site }) => {
+    await site.open();
+    await site.loaded();
+    await page.locator('tr#bid-6 .pcw-btn-select').click();
+    await page.locator('tr#bid-2 .pcw-btn-select').click();
+    await page.locator('.pcw-pick-filter[data-filter="only"]').click();
+    await page.locator('tr#bid-2 .pcw-btn-select').click();
+    await expect.poll(() => visibleIds(page)).toEqual(['bid-6']);
+    await page.locator('tr#bid-6 .pcw-btn-select').click();
+    await expect(page.locator('.pcw-pick-panel')).toBeHidden();
+    await expect.poll(async () => (await visibleIds(page)).length).toBe(7);
+    await expect(page.locator('.pcw-summary')).toBeVisible();
+    await page.locator('tr#bid-3 .pcw-btn-select').click();
+    await expect(page.locator('.pcw-pick-filter[data-filter="only"]')).toHaveText('Show only selected');
+  });
+
+  test('Clear turns the filter off and shows everything', async ({ page, site }) => {
+    await site.open();
+    await site.loaded();
+    await page.locator('tr#bid-6 .pcw-btn-select').click();
+    await page.locator('.pcw-pick-filter[data-filter="only"]').click();
+    await expect.poll(() => visibleIds(page)).toEqual(['bid-6']);
+    await page.locator('.pcw-pick-clear').click();
+    await expect.poll(async () => (await visibleIds(page)).length).toBe(7);
+    await expect(page.locator('.pcw-summary')).toBeVisible();
+  });
+
+  test('Hide excluded hides the excluded cards; the yellow box shows what is left', async ({ page, site }) => {
+    await site.open();
+    await site.loaded();
+    await page.locator('tr#bid-6 .pcw-btn-exclude').click();
+    await page.locator('tr#bid-7 .pcw-btn-exclude').click();
+    const hide = page.locator('.pcw-pick-filter[data-filter="hide"]');
+    await expect(hide).toHaveText('Hide excluded');
+    await hide.click();
+    await expect.poll(() => visibleIds(page)).toEqual(['bid-5', 'bid-3', 'bid-2', 'bid-1', 'bid-4']);
+    await expect(panelText(page)).toHaveText('2 cards excluded · Remaining total: $215.00 · Excluded cards hidden');
+    await expect(page.locator('.pcw-summary')).toBeHidden();
+    // Excluding another card while hidden makes it disappear right away.
+    await page.locator('tr#bid-5 .pcw-btn-exclude').click();
+    await expect.poll(() => visibleIds(page)).toEqual(['bid-3', 'bid-2', 'bid-1', 'bid-4']);
+    // Switching straight to "Show only excluded".
+    await page.locator('.pcw-pick-filter[data-filter="only"]').click();
+    await expect.poll(() => visibleIds(page)).toEqual(['bid-6', 'bid-5', 'bid-7']);
+    await expect(hide).toHaveText('Hide excluded');
+    await page.locator('.pcw-pick-filter[data-filter="only"]').click(); // reads "Show all"
+    await expect.poll(async () => (await visibleIds(page)).length).toBe(7);
+    await expect(page.locator('.pcw-summary')).toBeVisible();
+  });
+
+  test('is off again after a reload, with the picks kept', async ({ page, site }) => {
+    await site.open();
+    await site.loaded();
+    await page.locator('tr#bid-6 .pcw-btn-select').click();
+    await page.locator('.pcw-pick-filter[data-filter="only"]').click();
+    await page.reload();
+    await site.loaded();
+    await expect(panelText(page)).toHaveText('1 card selected · Total: $870.49');
+    await expect(page.locator('.pcw-pick-filter[data-filter="only"]')).toHaveText('Show only selected');
+    await expect.poll(async () => (await visibleIds(page)).length).toBe(7);
   });
 });
 

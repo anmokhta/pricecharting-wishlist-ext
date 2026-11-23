@@ -2,6 +2,15 @@
 
 What changed in each version of Wishlist+ for PriceCharting.
 
+## 1.4.8 — 2026-11-22
+
+### New
+- Select a range: click Select (or Exclude) on one card, then Shift-click another to pick every card in between. While you hold Shift, the cards that would change are outlined.
+- Show only selected / Show only excluded: review just the cards you picked. In Exclude mode you can also Hide excluded to see only what's left.
+
+### Fixed
+- Clicking into the search box right after the page loads no longer freezes the page for a couple of seconds on large wishlists.
+
 ## 1.4.7 — 2026-11-21
 
 ### Changed

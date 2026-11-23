@@ -3,7 +3,7 @@
 .pcw-summary-text { font-weight: bold; }
 .pcw-summary-note { margin-left: 10px; font-size: 13px; color: #234; }
 .pcw-summary-note:empty { display: none; }
-.pcw-search { margin: 6px 0; }
+.pcw-search { margin: 6px 0; padding: 0; }
 .pcw-search input {
   box-sizing: border-box;
   width: 100%;
@@ -153,6 +153,28 @@ table#active.pcw-grid tr.item.pcw-picked-exclude { outline-offset: -1px; }
 }
 .pcw-pick-clear { background: #777; }
 .pcw-pick-clear:hover { background: #5f5f5f; }
+.pcw-pick-filter {
+  font-size: 12px;
+  font-weight: bold;
+  padding: 5px 12px;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #fff;
+  background: #2f6fb5;
+}
+.pcw-pick-filter:hover { background: #255a94; }
+.pcw-pick-filter[aria-pressed="true"] { background: #1d4f86; }
+.pcw-summary[hidden] { display: none; }
+
+/* Shift preview: the cards a shift-click would change. Green/red = they turn
+   on (select/exclude), grey = they turn off. */
+table#active tr.item.pcw-range { outline: 2px dashed #2e9e4f; outline-offset: -2px; }
+table#active tr.item.pcw-range-select > td { background-color: rgba(46, 158, 79, 0.16); }
+table#active tr.item.pcw-range-exclude { outline-color: #d13b3b; }
+table#active tr.item.pcw-range-exclude > td { background-color: rgba(209, 59, 59, 0.14); }
+table#active tr.item.pcw-range-off { outline-color: #888; }
+table#active tr.item.pcw-range-off > td { background-color: rgba(128, 128, 128, 0.16); }
 
 .pcw-retry {
   margin-left: 6px;

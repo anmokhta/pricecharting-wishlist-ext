@@ -1,8 +1,8 @@
 # Releasing a new version
 
-Developer notes for shipping an update. User-facing documentation is in the [README](../README.md).
+Developer notes for shipping an update. User-facing documentation is in the [README](../../README.md).
 
-[`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs on every push and pull request. It first checks that [CHANGELOG.md](../CHANGELOG.md) has notes for the version in `extension/manifest.json`, then runs the tests. On a push to `main`, once both pass, it:
+[`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) runs on every push and pull request. It first checks that [CHANGELOG.md](../../CHANGELOG.md) has notes for the version in `extension/manifest.json`, then runs the tests. On a push to `main`, once both pass, it:
 
 1. Reads `version` from `extension/manifest.json`.
 2. Zips the contents of `extension/` into `pricecharting-wishlist-v<version>.zip`.
@@ -27,7 +27,7 @@ Developer notes for shipping an update. User-facing documentation is in the [REA
    ```
 
    Use only the headings that apply; at least one with a bullet is required. Run `node scripts/release-notes.js` to check it.
-3. Add the developer-side entry (code and tests) to ROADMAP.md → Completed.
+3. Add the developer-side entry (code and tests) to [the roadmap](roadmap.md) → Completed.
 4. Push to `main` and wait for CI to publish the GitHub Release.
 5. Submit it to the Chrome Web Store with the manual workflow (below).
 
@@ -35,7 +35,7 @@ Without the CHANGELOG section, CI fails and nothing is published. Pushes without
 
 ## Submitting to the Chrome Web Store
 
-[`.github/workflows/store.yml`](../.github/workflows/store.yml) ("Submit to Chrome Web Store") sends a version to the store. **It only runs when you start it**; pushes never trigger it.
+[`.github/workflows/store.yml`](../../.github/workflows/store.yml) ("Submit to Chrome Web Store") sends a version to the store. **It only runs when you start it**; pushes never trigger it.
 
 **To run it:** GitHub → **Actions** → **Submit to Chrome Web Store** → **Run workflow** (branch `main`), or:
 
@@ -50,7 +50,7 @@ What it does:
 1. Reads the version from `extension/manifest.json` on `main`.
 2. Downloads `pricecharting-wishlist-v<version>.zip` from the GitHub Release `v<version>`. That's the exact zip CI built after the tests passed. If the release doesn't exist yet, it stops and tells you to push and wait for CI.
 3. Checks the zip's manifest has the same version.
-4. Runs [`scripts/chrome-store.js`](../scripts/chrome-store.js), which uses Chrome Web Store API v2 to:
+4. Runs [`scripts/chrome-store.js`](../../scripts/chrome-store.js), which uses Chrome Web Store API v2 to:
    - check the item's status, and stop if another version is still pending review;
    - upload the zip and wait for it to finish processing;
    - submit it for review (unless **submit** is unticked).
