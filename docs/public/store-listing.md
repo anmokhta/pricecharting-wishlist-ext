@@ -1,6 +1,6 @@
 # Chrome Web Store listing (live)
 
-The text submitted with **1.4.6**, which is the version live on the [store](https://chromewebstore.google.com/detail/opfopmnimlhgjgnoegkghpdpdgabjhcf). At that point the extension was still called "Wishlist Grid View for PriceCharting". The store's name, summary and icon come from `extension/manifest.json`; everything else here is pasted into the dashboard by hand.
+The listing for **1.4.6**, the version live on the [store](https://chromewebstore.google.com/detail/opfopmnimlhgjgnoegkghpdpdgabjhcf). At that point the extension was still called "Wishlist Grid View for PriceCharting". The store's name, summary and icon come from `extension/manifest.json`; everything else here is pasted into the dashboard by hand.
 
 The dashboard is the source of truth. If it was edited there, copy the change back here. The next version's text is in [../drafts/](../drafts/).
 
@@ -10,31 +10,29 @@ The dashboard is the source of truth. If it was edited there, copy the change ba
 
 > Sorts your whole PriceCharting wishlist by price, adds grid view, search, totals, Select/Exclude lists, and move-to-collection.
 
-**Description:**
+**Description** (copied from the live listing on 2026-11-22):
 
+> THIS IS AN INDEPENDENT PROJECT, NOT AFFILIATED WITH OR ENDORSED BY PRICECHARTING
+>
+>
 > Wishlist Grid View for PriceCharting makes your PriceCharting.com wishlist easier to browse, sort and manage.
 >
-> PriceCharting shows your wishlist 200 items at a time and sorts each page separately, so "Price: low to high" starts over on every page. This extension loads your entire wishlist and sorts all of it at once, then adds tools the wishlist page doesn't have.
+> Currently, PriceCharting shows your wishlist 200 items at a time and sorts each 'page' separately (even though the wishlist is one infinite scrolling page), so “Price: low to high” starts over on every page. This extension loads your entire wishlist and sorts all of it at once, then adds tools the wishlist page doesn’t have.
 >
 > FEATURES
->
-> • Whole-wishlist price sort: "Price: high to low" and "low to high" sort every card, not just the first 200. Cards without a price go last.
-> • Grid view: switch between the normal list and a card grid with larger images, using the icons next to the filters. Your choice is remembered.
-> • Totals at a glance: a box at the top always shows how many cards are on your wishlist and their combined value.
+> • Whole-wishlist price sort: Sorting now sorts every card, not just within intervals of 200 items. Items without a price go last.
+> • Grid view: switch between the normal list and a grid view with larger images, using the icons next to the filters. Your choice is remembered.
+> • Totals at a glance: a box at the top always shows how many items are in your wishlist and their combined value.
 > • Search: filter by card name or set. Every word you type must match, and the totals update to match. Press Esc to clear.
-> • Select / Exclude: mark cards green to build a list and see its total, or mark cards red to see what the rest of your wishlist is worth. Picks are remembered between visits.
+> • Select / Exclude: mark cards green to build a list and see its total, or mark car red to see what the rest of your wishlist is worth. Picks are remembered between visits.
 > • Move to collection: move a card from your wishlist to your collection with one button: click once, then again to confirm. It uses your PriceCharting default condition and only removes the card from your wishlist if the add succeeds.
-> • Small fixes: the tiny "-" button is relabeled "Remove", and the Set filter's leftover "Type part of console" hint now reads "Type part of set".
+> • Small fixes: the tiny “-” button is relabeled “Remove”, and the Set filter’s leftover “Type part of console” hint now reads “Type part of set”.
 >
 > HOW TO USE
->
 > Sign in to PriceCharting and open your wishlist (Collection → Wishlist). The extension starts automatically.
 >
 > PRIVACY
->
 > The extension runs only on PriceCharting wishlist pages and requests no browser permissions. Everything happens in your browser. It talks only to PriceCharting.com, using your existing sign-in, and sends nothing to the developer or anyone else. No analytics, tracking or ads. Your view setting and Select/Exclude picks are stored only in your browser.
->
-> This is an independent project, not affiliated with or endorsed by PriceCharting.
 
 **Category:** Functionality & UI
 
