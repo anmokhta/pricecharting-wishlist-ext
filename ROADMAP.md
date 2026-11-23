@@ -126,14 +126,14 @@ A **Group by set** toggle next to the grid/list buttons. When it's on, cards are
 - [x] Register a Chrome Web Store developer account; contact email set and verified.
 - [x] Privacy policy rewritten (`docs/privacy-policy.md`) and published as a public gist: https://gist.github.com/anmokhta/0dbdab84b479a030717f3584833156b9. When the policy changes, edit `docs/privacy-policy.md` and update the gist with `gh gist edit 0dbdab84b479a030717f3584833156b9 docs/privacy-policy.md`.
 - [x] Store description written (search, Select/Exclude lists, Move to collection, privacy note, not-affiliated line). Category: Functionality & UI.
-- [x] Screenshots captured on the test account; 1280×800 versions (page only, no browser toolbar) are in `screencaps/1280x800/`.
+- [x] Screenshots captured on the test account; 1280×800 versions (page only, no browser toolbar) are now in `design/drafts/store-listing-v1/` (replaced by the new store art).
 - [x] Privacy practices: single-purpose statement, host-access justification (content script on `pricecharting.com/wishlist*` only; no permissions), no remote code, data usage = website content only, all three certifications.
 - [x] Test account and test instructions (under 500 characters) entered. Keep that account's wishlist stocked and its password unchanged.
 - [x] Uploaded the v1.4.6 zip from GitHub Releases and submitted for review (2026-11-15).
 - [x] Approved and published (live by 2026-11-21).
 - [x] Store link added to the README install section.
 - [ ] Set up the service account and GitHub secrets for the "Submit to Chrome Web Store" action (docs/releasing.md → One-time setup).
-- [ ] Upload the new store art from `design/promo-tile/` (marquee promo tile 1400×560 and four 1280×800 screenshots), and capture a Move to collection screenshot for the fifth slot.
+- [ ] Upload the new store art from `design/current/store-listing/` (marquee promo tile 1400×560 and four 1280×800 screenshots), and capture a Move to collection screenshot for the fifth slot.
 - [ ] 1.4.6 has cleared review: run the action to submit 1.4.7 (the rename and new icon). The store listing name comes from the manifest. Check the dashboard listing text still matches the new name.
 
 ## Backlog
@@ -159,7 +159,7 @@ Newest first. When a planned or backlog item ships, it moves here. This section 
 ### 1.4.7 — Rename, new icon and manual store submission (2026-11-21)
 
 - **What it does:** renames the extension to "Wishlist+ for PriceCharting", replaces the icon (stacked cards with a green "+", no PriceCharting logo elements), and rewords the description around what it fixes (the whole wishlist loads, so price sorting covers every item). Adds a manual GitHub Action, "Submit to Chrome Web Store", that uploads the tested release zip for the current version and submits it for review. It never runs on push.
-- **Code:** `extension/manifest.json`: name, description, version, and a new 32 px icon entry. `extension/icon16/32/48/128.png` redrawn; sources and concept rounds in `design/icon-concepts/`. Store art (marquee promo tile and screenshots) in `design/promo-tile/`. New `.github/workflows/store.yml` (`workflow_dispatch` only, `main` only; downloads the `v<version>` release zip and checks its manifest version). New `scripts/chrome-store.js`: signs a service-account JWT with `node:crypto`, then calls Chrome Web Store API v2 `fetchStatus` → `upload` → `publish`; refuses while another version is pending review. Docs renamed throughout; setup and pitfalls in `docs/releasing.md`.
+- **Code:** `extension/manifest.json`: name, description, version, and a new 32 px icon entry. `extension/icon16/32/48/128.png` redrawn; sources in `design/current/icon/`, concept rounds in `design/drafts/icon-concepts/`. Store art (marquee promo tile and screenshots) in `design/current/store-listing/`, built from `design/current/source/`. New `.github/workflows/store.yml` (`workflow_dispatch` only, `main` only; downloads the `v<version>` release zip and checks its manifest version). New `scripts/chrome-store.js`: signs a service-account JWT with `node:crypto`, then calls Chrome Web Store API v2 `fetchStatus` → `upload` → `publish`; refuses while another version is pending review. Docs renamed throughout; setup and pitfalls in `docs/releasing.md`.
 - **Tests:** `test/chrome-store.spec.js` (8 tests, fake Google API): JWT claims and signature, upload then publish, `--no-submit` draft, pending-review refusal, polling an in-progress upload, failed upload, HTTP error message, missing secrets.
 
 ### 1.4.6 — CSV export removed (2026-11-15)

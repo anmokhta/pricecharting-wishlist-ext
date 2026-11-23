@@ -64,7 +64,7 @@ extension/                  Everything that ships in the extension
   manifest.json             MV3 manifest (the version number lives here)
   content.js                All behavior, one IIFE, no dependencies
   content.css               Grid layout and extension UI styles
-  icon16/32/48/128.png      Extension icon (sources in design/icon-concepts/final)
+  icon16/32/48/128.png      Extension icon (sources in design/current/icon/)
 docs/
   technical-summary.md      Deep dive: DOM model, architecture, testing, history
   debug-session-summary.md  Root-cause write-up of the "bare rows" bug fixed in 1.4.1
@@ -75,8 +75,9 @@ test/
   fixtures.js               Fake wishlist pages shared by the tests and the mockup
   mockup.html               Manual mockup page for trying changes in a browser
   serve.js                  Tiny static server for the mockup
-design/icon-concepts/       Icon concepts (SVG), preview sheets, and the final icon sources
-screencaps/                 Chrome Web Store screenshots (originals + 1280x800/ upload copies)
+design/                     All images and artwork (see design/README.md)
+  current/                  What's in use: icon sources, store listing PNGs, and their sources
+  drafts/                   Earlier versions: icon concepts, old store screenshots, unused crops
 .github/workflows/ci.yml    Runs the tests; on main, builds the zip and publishes a Release
 ROADMAP.md                  Planned work, backlog, and completed work (developer detail)
 CHANGELOG.md                User-facing release notes for every version
